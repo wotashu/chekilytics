@@ -1,39 +1,26 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-from typing import List
+from google.oauth2 import service_account
+from gsheetsdb import connect
 
+# Create a connection object.
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+    ],
+)
+conn = connect(credentials=credentials)
 
-@st.cache
-def get_checki_data():
-    filepath = "/mnt/c/Users/jolin/Downloads/cheki.csv"
-    df = pd.read_csv(filepath)
-    return df
+# Perform SQL query on the Google Sheet.
+# Uses st.cache to only rerun when the query changes or after 10 min.
+@st.cache(ttl=600)
+def run_query(query):
+    rows = conn.execute(query, headers=1)
+    return rows
 
+sheet_url = st.secrets["private_gsheets_url"]
+rows = run_query(f'SELECT * FROM "{sheet_url}"')
 
-def get_group(name: str) -> List[str]:
-    name_group = name.split("@")
-    try:
-        group = name_group[1]
-        return group
-    except IndexError:
-        return name
-
-
-df = get_checki_data()
-df = pd.DataFrame(
-    df.groupby(
-        ['person'])['date'].count().sort_values(ascending=False)
-    ).reset_index()
-df.columns = ['name', "count"]
-
-df = df.query('count>10')
-df['group'] = df['name'].apply(get_group)
-df['name'] = df['name'].str.replace("@.+", "", regex=True)
-
-df
-
-df = df.sort_values(by='count', ascending=True)
-
-fig = px.bar(df, x='count', y='group', color='name', height=900)
-st.plotly_chart(fig, use_container_width=True)
+# Print results.
+for row in rows:
+    st.write(f"{row.Name1} has a :{row.Date}:")
