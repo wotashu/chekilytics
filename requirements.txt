@@ -2,3 +2,5 @@ streamlit
 pandas
 plotly
 gsheetsdb
+gspread
+numpy
