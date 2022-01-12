@@ -67,6 +67,9 @@ def group_cheki_by_name(df):
                         "person": row[col],
                         "location": row["Location"],
                         "year": row["Date"].year,
+                        "month": row["Date"].month,
+                        "name": split_name_group(row[col])[0],
+                        "group": split_name_group(row[col])[1],
                     }
                 )
     return pd.DataFrame(chekis)
@@ -83,6 +86,29 @@ def split_name_group(person: str) -> List[str]:
         return [name, group]
     else:
         raise exception
+
+
+def get_bar_fig(df):
+    return px.bar(
+        df.sort_values(by="count", ascending=False),
+        x="count",
+        y="name",
+        color="name",
+        text="count",
+        title=f"結果: {df['count'].sum()}枚数",
+        color_discrete_map=COLOR_DESCRETE_MAP,
+    )
+
+
+def get_pie_fig(df):
+    fig =  px.pie(
+        df.sort_values(by="count", ascending=True),
+        names="name",
+        values="count",
+        color_discrete_map=COLOR_DESCRETE_MAP,
+        )
+    fig.update_traces(textposition="inside", textinfo="value+label")
+    return fig
 
 
 def main():
@@ -103,22 +129,18 @@ def main():
 
     df = df[df.date.between(first_date, last_date)]
     groupby_select = st.radio(
-        "Select Group by", ("none", "name", "group", "location", "year")
+        "Select Group by", ("none", "name", "group", "location", "year", "month")
     )
+    st.write(f"Total values: {len(df)}")
 
     if groupby_select == "name":
         df = (
-            df.groupby(["person"])
+            df.groupby(["person", "name", "group"])
             .date.count()
             .sort_values(ascending=False)
             .reset_index()
         )
         df = df.rename(columns={"date": "count"})
-        name_splits = pd.DataFrame(
-            df["person"].apply(lambda x: split_name_group(x)).values.tolist()
-        )
-        name_splits.columns = ["name", "group"]
-        df = pd.concat([df, name_splits], axis=1)
 
         plot_type = st.radio("Pick a plot type", ("dataframe", "bar", "pie"))
 
@@ -127,7 +149,7 @@ def main():
 
         elif plot_type in ["bar", "pie"]:
             max_value = int(df["count"].max())
-            cutoff = st.slider("Cutoff for other", 0, max_value, 40)
+            cutoff = st.slider("Cutoff for other", 0, max_value, round(df['count'].median()))
             df_top = df[df["count"] >= cutoff]
             df_bottom = df[df["count"] < cutoff]
             others_count = df_bottom["count"].sum()
@@ -138,26 +160,16 @@ def main():
                 )
 
             if plot_type == "bar":
-                fig = px.bar(
-                    df_top.sort_values(by="count", ascending=False),
-                    x="count",
-                    y="name",
-                    color="name",
-                    text="count",
-                    title=f"結果: {df_top['count'].sum()}枚数",
-                    color_discrete_map=COLOR_DESCRETE_MAP,
-                )
-                st.plotly_chart(fig)
+                fig = get_bar_fig(df_top)
 
             elif plot_type == "pie":
-                fig = px.pie(
-                    df_top.sort_values(by="count", ascending=True),
-                    names="name",
-                    values="count",
-                    color_discrete_map=COLOR_DESCRETE_MAP,
-                )
-                fig.update_traces(textposition="inside", textinfo="value+label")
-                st.plotly_chart(fig)
+                fig = get_pie_fig(df_top)
+            
+            st.plotly_chart(fig)
+
+    elif groupby_select == "month":
+        df = df.groupby(['year', 'month', 'person'])['name'].count().sort_values(ascending=False)
+        st.dataframe(df)
 
     else:
         st.dataframe(df)
