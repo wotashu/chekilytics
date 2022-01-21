@@ -1,12 +1,13 @@
+import datetime
 from logging import exception
+from typing import List
+
+import gspread
+import numpy as np
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 from google.oauth2 import service_account
-import gspread
-import pandas as pd
-import numpy as np
-import plotly.express as px
-from typing import List
-import datetime
 
 COLOR_DESCRETE_MAP = {
     "Suzy": "#EF553B".lower(),
@@ -101,12 +102,12 @@ def get_bar_fig(df):
 
 
 def get_pie_fig(df):
-    fig =  px.pie(
+    fig = px.pie(
         df.sort_values(by="count", ascending=True),
         names="name",
         values="count",
         color_discrete_map=COLOR_DESCRETE_MAP,
-        )
+    )
     fig.update_traces(textposition="inside", textinfo="value+label")
     return fig
 
@@ -149,7 +150,9 @@ def main():
 
         elif plot_type in ["bar", "pie"]:
             max_value = int(df["count"].max())
-            cutoff = st.slider("Cutoff for other", 0, max_value, round(df['count'].median()))
+            cutoff = st.slider(
+                "Cutoff for other", 0, max_value, round(df["count"].median())
+            )
             df_top = df[df["count"] >= cutoff]
             df_bottom = df[df["count"] < cutoff]
             others_count = df_bottom["count"].sum()
@@ -164,11 +167,15 @@ def main():
 
             elif plot_type == "pie":
                 fig = get_pie_fig(df_top)
-            
+
             st.plotly_chart(fig)
 
     elif groupby_select == "month":
-        df = df.groupby(['year', 'month', 'person'])['name'].count().sort_values(ascending=False)
+        df = (
+            df.groupby(["year", "month", "person"])["name"]
+            .count()
+            .sort_values(ascending=False)
+        )
         st.dataframe(df)
 
     else:

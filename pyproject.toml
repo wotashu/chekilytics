@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "streamlit-cheki"
+version = "0.1.0"
+description = ""
+authors = ["Jonathan <jolin3apa@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+streamlit = "^1.4.0"
+pandas = "^1.3.5"
+plotly = "^5.5.0"
+gspread = "^5.1.1"
+numpy = "^1.22.1"
+google = "^3.0.0"
+
+[tool.poetry.dev-dependencies]
+black = "^21.12b0"
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
