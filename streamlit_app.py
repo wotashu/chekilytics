@@ -89,7 +89,7 @@ def split_name_group(person: str) -> List[str]:
         raise exception
 
 
-def get_bar_fig(df):
+def get_bar_fig(df, **kwargs):
     return px.bar(
         df.sort_values(by="count", ascending=False),
         x="count",
@@ -112,6 +112,17 @@ def get_pie_fig(df):
     return fig
 
 
+def get_cutoff_data(df, cutoff: int):
+    df_top = df[df["count"] >= cutoff]
+    df_bottom = df[df["count"] < cutoff]
+    others_count = df_bottom["count"].sum()
+    df_top = df_top.append(
+        {"count": others_count, "name": "OTHERS", "group": "OTHERS"},
+        ignore_index=True
+    )
+    return df_top
+
+
 def main():
     sheet_url = st.secrets["private_gsheets_url"]
     df = get_worksheet(sheet_url, 0)
@@ -119,67 +130,73 @@ def main():
 
     earliest_date = df.date.min()
     today = datetime.datetime.today().date()
+    last_date = today
+    first_date = datetime.date(today.year, 1, 1)
 
-    first_date, last_date = st.date_input(
+    date_selector = st.sidebar.date_input(
         "Select date range",
-        value=[earliest_date, today],
+        value=[first_date, today],
         min_value=earliest_date,
         max_value=today,
     )
+
+    if len(date_selector) == 2:
+        first_date = date_selector[0]
+        last_date = date_selector[1]
+
     st.write("Selected dates are", first_date, last_date)
 
     df = df[df.date.between(first_date, last_date)]
-    groupby_select = st.radio(
-        "Select Group by", ("none", "name", "group", "location", "year", "month")
+
+    groupby_select = st.sidebar.multiselect(
+        "Choose Columns to group by",
+        ("name", "group", "location", "date", "year", "month")
     )
+
     st.write(f"Total values: {len(df)}")
 
-    if groupby_select == "name":
-        df = (
-            df.groupby(["person", "name", "group"])
-            .date.count()
-            .sort_values(ascending=False)
-            .reset_index()
-        )
-        df = df.rename(columns={"date": "count"})
+    plot_type = st.sidebar.selectbox("Pick a plot type", ("dataframe", "bar", "pie"))
 
-        plot_type = st.radio("Pick a plot type", ("dataframe", "bar", "pie"))
+    if groupby_select:
+        df = df.groupby(groupby_select)['person'].count().reset_index()
+        df = df.rename(columns={'person': 'count'})
 
-        if plot_type == "dataframe":
-            st.dataframe(df)
+    if plot_type == "dataframe":
+        st.dataframe(df)
 
-        elif plot_type in ["bar", "pie"]:
+    elif plot_type in ["bar", "pie"]:
+        if groupby_select:
             max_value = int(df["count"].max())
             cutoff = st.slider(
                 "Cutoff for other", 0, max_value, round(df["count"].median())
             )
-            df_top = df[df["count"] >= cutoff]
-            df_bottom = df[df["count"] < cutoff]
-            others_count = df_bottom["count"].sum()
             if cutoff > 0:
-                df_top = df_top.append(
-                    {"count": others_count, "name": "OTHERS", "group": "OTHERS"},
-                    ignore_index=True,
-                )
+                df = get_cutoff_data(df, cutoff)
+            if 'name' in groupby_select:
+                if plot_type == "bar":
+                    fig = get_bar_fig(df)
+                elif plot_type == "pie":
+                    fig = get_pie_fig(df)
+            else:
+                if plot_type == "bar":
+                    fig = px.bar(
+                        df.sort_values(by="count", ascending=False),
+                        y='count',
+                        x=groupby_select[0],
+                        color="count",
+                        # text=groupby_select[1],
+                    )
+                elif plot_type == "pie":
+                    fig = px.pie(
+                        df.sort_values(by='count', ascending=False),
+                        names=groupby_select[0],
+                        values='count'
+                    )
+        else:
+            fig = px.pie(df, values="person")
+        
+        st.plotly_chart(fig)
 
-            if plot_type == "bar":
-                fig = get_bar_fig(df_top)
-
-            elif plot_type == "pie":
-                fig = get_pie_fig(df_top)
-
-            st.plotly_chart(fig)
-
-    elif groupby_select == "month":
-        df = (
-            df.groupby(["year", "month", "person"])["name"]
-            .count()
-            .sort_values(ascending=False)
-        )
-        st.dataframe(df)
-
-    else:
-        st.dataframe(df)
 
 
 if __name__ == "__main__":
