@@ -69,6 +69,10 @@ def get_worksheet(url, sheet_num=0):
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
     df.drop(df.index[0], inplace=True)
+    return df
+
+
+def get_dates(df):
     df["Date"] = pd.to_datetime(df["Date"])
     df["Month"] = df["Date"].dt.month
     df["Year"] = df["Date"].dt.year
@@ -146,6 +150,7 @@ def get_cutoff_data(df, cutoff: int):
 def main():
     sheet_url = st.secrets["private_gsheets_url"]
     df = get_worksheet(sheet_url, 0)
+    df = get_dates(df)
     df = group_cheki_by_name(df)
 
     earliest_date = df.date.min()
