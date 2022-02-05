@@ -8,24 +8,43 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from google.oauth2 import service_account
+import matplotlib.colors as mcolors
+
 
 COLOR_DESCRETE_MAP = {
-    "Suzy": "#EF553B".lower(),
-    "OTHERS": "rgb(153,153,153)",
-    "七瀬千夏": "#EF553B".lower(),
-    "天音ゆめ": "#AB63FA".lower(),
-    "恵深あむ": "#FECB52".lower(),
-    "楠木りほ": "#19D3F3".lower(),
-    "大西春菜": "#636EFA".lower(),
-    "椎名まどか": "#19D3F3".lower(),
-    "中谷亜優": "rgb(242,242,242)",
-    "石田綾音": "#FF97FF".lower(),
-    "濱崎みき": "rgb(242,242,242)",
-    "瀬乃悠月": "#EF553B".lower(),
-    "望月紗奈": "#FF97FF".lower(),
-    "音羽のあ": "#636EFA".lower(),
-    "火野快飛": "#636EFA".lower(),
-    "メグ・ピッチ・オリオン": "#00CC96".lower(),
+    "Suzy": "red",
+    "OTHERS": "grey",
+    "七瀬千夏": "red",
+    "天音ゆめ": "lavender",
+    "恵深あむ": "yellow",
+    "楠木りほ": "cyan",
+    "大西春菜": "blue",
+    "椎名まどか": "cyan",
+    "中谷亜優": "white",
+    "石田綾音": "fuchsia",
+    "濱崎みき": "white",
+    "瀬乃悠月": "crimson",
+    "望月紗奈": "pink",
+    "音羽のあ": "blue",
+    "火野快飛": "azure",
+    "メグ・ピッチ・オリオン": "lime",
+    "コイヌ フユ": "yellow",
+    "涼乃みほ": "lightblue",
+    "松島朱里": "red",
+    "星名 夢音": "lightgreen",
+    "雨宮れいな": "white",
+    "岬あやめ": "yellow",
+    "鳴上綺羅": "lightblue",
+    "桜衣みゆな": "pink",
+    "Joyce": "green",
+    "木戸怜緒奈": "cyan",
+    "原田真帆": "coral",
+
+}
+
+xkcd_colors = {
+    name: mcolors.XKCD_COLORS[f"xkcd:{color_name}"].upper()
+    for name, color_name in COLOR_DESCRETE_MAP.items()
 }
 
 
@@ -97,7 +116,7 @@ def get_bar_fig(df, **kwargs):
         color="name",
         text="count",
         title=f"結果: {df['count'].sum()}枚数",
-        color_discrete_map=COLOR_DESCRETE_MAP,
+        color_discrete_map=xkcd_colors,
     )
 
 
@@ -106,20 +125,21 @@ def get_pie_fig(df):
         df.sort_values(by="count", ascending=True),
         names="name",
         values="count",
-        color_discrete_map=COLOR_DESCRETE_MAP,
+        color="name",
+        color_discrete_map=xkcd_colors,
     )
     fig.update_traces(textposition="inside", textinfo="value+label")
     return fig
 
 
 def get_cutoff_data(df, cutoff: int):
-    df_top = df[df["count"] >= cutoff]
+    df_top = df[df["count"] >= cutoff].reset_index(drop=True)
     df_bottom = df[df["count"] < cutoff]
     others_count = df_bottom["count"].sum()
-    df_top = df_top.append(
-        {"count": others_count, "name": "OTHERS", "group": "OTHERS"},
-        ignore_index=True
+    others_df = pd.DataFrame(
+        {"count": [others_count], "name": ["OTHERS"], "group": ["OTHERS"]}
     )
+    df_top = pd.concat([df_top, others_df], axis=0)
     return df_top
 
 
@@ -150,7 +170,7 @@ def main():
 
     groupby_select = st.sidebar.multiselect(
         "Choose Columns to group by",
-        ("name", "group", "location", "date", "year", "month")
+        ("name", "group", "location", "date", "year", "month"),
     )
 
     st.write(f"Total values: {len(df)}")
@@ -158,8 +178,9 @@ def main():
     plot_type = st.sidebar.selectbox("Pick a plot type", ("dataframe", "bar", "pie"))
 
     if groupby_select:
-        df = df.groupby(groupby_select)['person'].count().reset_index()
-        df = df.rename(columns={'person': 'count'})
+        df = df.groupby(groupby_select)["person"].count().reset_index()
+        df = df.rename(columns={"person": "count"})
+        df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
 
     if plot_type == "dataframe":
         st.dataframe(df)
@@ -172,7 +193,7 @@ def main():
             )
             if cutoff > 0:
                 df = get_cutoff_data(df, cutoff)
-            if 'name' in groupby_select:
+            if "name" in groupby_select:
                 if plot_type == "bar":
                     fig = get_bar_fig(df)
                 elif plot_type == "pie":
@@ -181,22 +202,22 @@ def main():
                 if plot_type == "bar":
                     fig = px.bar(
                         df.sort_values(by="count", ascending=False),
-                        y='count',
+                        y="count",
                         x=groupby_select[0],
                         color="count",
                         # text=groupby_select[1],
                     )
                 elif plot_type == "pie":
                     fig = px.pie(
-                        df.sort_values(by='count', ascending=False),
+                        df.sort_values(by="count", ascending=False),
                         names=groupby_select[0],
-                        values='count'
+                        values="count",
+                        color="color",
                     )
         else:
             fig = px.pie(df, values="person")
-        
-        st.plotly_chart(fig)
 
+        st.plotly_chart(fig)
 
 
 if __name__ == "__main__":
