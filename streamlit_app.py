@@ -63,8 +63,18 @@ gc = get_google_conn()
 
 
 # Uses st.cache to only rerun when the query changes or after 10 min.
-@st.cache(ttl=600)
+@st.cache(ttl=600, allow_output_mutation=True)
 def get_worksheet(url, sheet_num=0):
+    worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
+    df = pd.DataFrame(worksheet.get_all_values())
+    df.columns = df.iloc[0]
+    df.drop(df.index[0], inplace=True)
+    df.columns = [col.lower() for col in df.columns]
+    return df
+
+
+@st.cache(ttl=600, allow_output_mutation=True)
+def get_worksheet_location(url, sheet_num=2):
     worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
@@ -72,11 +82,20 @@ def get_worksheet(url, sheet_num=0):
     return df
 
 
+@st.cache(ttl=600, allow_output_mutation=True)
+def get_worksheet_names(url, sheet_num=1):
+    worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
+    df = pd.DataFrame(worksheet.get_all_values())
+    df.columns = df.iloc[0]
+    df.drop(df.index[0], inplace=True)
+    return df
+
+
+
 def get_dates(df):
-    df["Date"] = pd.to_datetime(df["Date"])
-    df["Month"] = df["Date"].dt.month
-    df["Year"] = df["Date"].dt.year
-    df["Cheki"] = 0
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.month
+    df["year"] = df["date"].dt.year
     return df
 
 
@@ -84,14 +103,14 @@ def group_cheki_by_name(df):
     chekis = []
     for _, row in df.iterrows():
         for col in df.columns:
-            if (row[col] is not np.nan) and ("Name" in col) and (row[col]):
+            if (row[col] is not np.nan) and ("name" in col) and (row[col]):
                 chekis.append(
                     {
-                        "date": row["Date"].date(),
+                        "date": row["date"].date(),
                         "person": row[col],
-                        "location": row["Location"],
-                        "year": row["Date"].year,
-                        "month": row["Date"].month,
+                        "location": row["location"],
+                        "year": row["date"].year,
+                        "month": row["date"].month,
                         "name": split_name_group(row[col])[0],
                         "group": split_name_group(row[col])[1],
                     }
@@ -149,11 +168,13 @@ def get_cutoff_data(df, cutoff: int):
 
 def main():
     sheet_url = st.secrets["private_gsheets_url"]
-    df = get_worksheet(sheet_url, 0)
-    df = get_dates(df)
-    df = group_cheki_by_name(df)
+    cheki_df = get_worksheet(sheet_url, 0)
+    dated_cheki_df = get_dates(cheki_df)
+    names_df = group_cheki_by_name(dated_cheki_df)
+    # person_df = get_worksheet(sheet_url, 1)
+    # venue_df = get_worksheet(sheet_url, 2)
 
-    earliest_date = df.date.min()
+    earliest_date = names_df.date.min()
     today = datetime.datetime.today().date()
     last_date = today
     first_date = datetime.date(today.year, 1, 1)
@@ -171,21 +192,32 @@ def main():
 
     st.write("Selected dates are", first_date, last_date)
 
-    df = df[df.date.between(first_date, last_date)]
+    names_df = names_df[names_df.date.between(first_date, last_date)]
 
     groupby_select = st.sidebar.multiselect(
         "Choose Columns to group by",
-        ("name", "group", "location", "date", "year", "month"),
+        ("cheki_id", "name", "location"),
     )
+    print(groupby_select)
 
-    st.write(f"Total values: {len(df)}")
+    st.write(f"Total values: {len(names_df)}")
 
-    plot_type = st.sidebar.selectbox("Pick a plot type", ("dataframe", "bar", "pie"))
-
+    plot_type = "dataframe"
     if groupby_select:
-        df = df.groupby(groupby_select)["person"].count().reset_index()
+        plot_type = st.sidebar.selectbox("Pick a plot type", ("dataframe", "bar", "pie"))
+
+    if "name" in groupby_select:
+        df = names_df.groupby(groupby_select)["person"].count().reset_index()
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
+
+    elif "location" in groupby_select:
+        df = names_df.groupby("location")["person"].count().reset_index()
+        df =df.rename(columns={"person": "count"})
+        df =df.sort_values(by="count", ascending=False)
+
+    else:
+        df = dated_cheki_df
 
     if plot_type == "dataframe":
         st.dataframe(df)
