@@ -181,7 +181,7 @@ def main():
 
     date_selector = st.sidebar.date_input(
         "Select date range",
-        value=[first_date, today],
+        value=[earliest_date, today],
         min_value=earliest_date,
         max_value=today,
     )
