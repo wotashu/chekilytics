@@ -78,6 +78,7 @@ def get_worksheet_location(url, sheet_num=2):
     worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
+    df.columns = [col.lower() for col in df.columns]
     df.drop(df.index[0], inplace=True)
     return df
 
@@ -172,7 +173,7 @@ def main():
     dated_cheki_df = get_dates(cheki_df)
     names_df = group_cheki_by_name(dated_cheki_df)
     # person_df = get_worksheet(sheet_url, 1)
-    # venue_df = get_worksheet(sheet_url, 2)
+    venue_df = get_worksheet_location(sheet_url, 2)
 
     earliest_date = names_df.date.min()
     today = datetime.datetime.today().date()
@@ -196,9 +197,8 @@ def main():
 
     groupby_select = st.sidebar.multiselect(
         "Choose Columns to group by",
-        ("cheki_id", "name", "location"),
+        ("cheki_id", "name", "location", "city"),
     )
-    print(groupby_select)
 
     st.write(f"Total values: {len(names_df)}")
 
@@ -211,10 +211,11 @@ def main():
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
 
-    elif "location" in groupby_select:
+    elif "location" in groupby_select or "city" in groupby_select:
         df = names_df.groupby("location")["person"].count().reset_index()
-        df =df.rename(columns={"person": "count"})
-        df =df.sort_values(by="count", ascending=False)
+        df = df.rename(columns={"person": "count"})
+        df = df.sort_values(by="count", ascending=False)
+        df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
 
     else:
         df = dated_cheki_df
@@ -245,12 +246,19 @@ def main():
                         # text=groupby_select[1],
                     )
                 elif plot_type == "pie":
-                    fig = px.pie(
-                        df.sort_values(by="count", ascending=False),
-                        names=groupby_select[0],
-                        values="count",
-                        color="color",
-                    )
+                    if "color" in df.columns:
+                        fig = px.pie(
+                            df.sort_values(by="count", ascending=False),
+                            names=groupby_select[0],
+                            values="count",
+                            color="color",
+                        )
+                    else:
+                        fig = px.pie(
+                            df.sort_values(by="count", ascending=False),
+                            names=groupby_select[0],
+                            values="count",
+                        )
         else:
             fig = px.pie(df, values="person")
 
