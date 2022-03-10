@@ -180,7 +180,7 @@ def main():
     last_date = today
     first_date = datetime.date(today.year, 1, 1)
 
-    date_selector = st.sidebar.date_input(
+    date_selector = st.date_input(
         "Select date range",
         value=[earliest_date, today],
         min_value=earliest_date,
