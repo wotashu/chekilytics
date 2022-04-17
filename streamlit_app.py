@@ -39,7 +39,6 @@ COLOR_DESCRETE_MAP = {
     "Joyce": "green",
     "木戸怜緒奈": "cyan",
     "原田真帆": "coral",
-
 }
 
 xkcd_colors = {
@@ -90,7 +89,6 @@ def get_worksheet_names(url, sheet_num=1):
     df.columns = df.iloc[0]
     df.drop(df.index[0], inplace=True)
     return df
-
 
 
 def get_dates(df):
@@ -172,7 +170,7 @@ def main():
     cheki_df = get_worksheet(sheet_url, 0)
     dated_cheki_df = get_dates(cheki_df)
     names_df = group_cheki_by_name(dated_cheki_df)
-    # person_df = get_worksheet(sheet_url, 1)
+    person_df = get_worksheet(sheet_url, 1)
     venue_df = get_worksheet_location(sheet_url, 2)
 
     earliest_date = names_df.date.min()
@@ -195,23 +193,24 @@ def main():
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
 
-    groupby_select = st.sidebar.multiselect(
+    groupby_select = st.sidebar.selectbox(
         "Choose Columns to group by",
-        ("cheki_id", "name", "location", "city"),
+        ("name", "cheki_id", "location"),
     )
 
     st.write(f"Total values: {len(names_df)}")
 
-    plot_type = "dataframe"
     if groupby_select:
-        plot_type = st.sidebar.selectbox("Pick a plot type", ("dataframe", "bar", "pie"))
+        plot_type = st.sidebar.selectbox(
+            "Pick a plot type", ("dataframe", "bar", "pie")
+        )
 
     if "name" in groupby_select:
         df = names_df.groupby(groupby_select)["person"].count().reset_index()
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
 
-    elif "location" in groupby_select or "city" in groupby_select:
+    elif "location" in groupby_select:
         df = names_df.groupby("location")["person"].count().reset_index()
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False)

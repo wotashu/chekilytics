@@ -13,6 +13,7 @@ gspread = "^5.1.1"
 numpy = "^1.22.1"
 google = "^3.0.0"
 matplotlib = "^3.5.1"
+googlemaps = "^4.6.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"
