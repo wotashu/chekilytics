@@ -6,6 +6,7 @@ import gspread
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from soupsieve import select
 import streamlit as st
 from google.oauth2 import service_account
 import matplotlib.colors as mcolors
@@ -193,12 +194,19 @@ def main():
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
 
+    all_persons = person_df['name'].sort_values().values
+
+
+    select_person = st.sidebar.selectbox(
+        "Search for a name",
+        np.insert(all_persons, 0, '')
+    )
+
     groupby_select = st.sidebar.selectbox(
         "Choose Columns to group by",
         ("name", "cheki_id", "location"),
     )
 
-    st.write(f"Total values: {len(names_df)}")
 
     if groupby_select:
         plot_type = st.sidebar.selectbox(
@@ -206,9 +214,18 @@ def main():
         )
 
     if "name" in groupby_select:
-        df = names_df.groupby(groupby_select)["person"].count().reset_index()
+        also_group_by_date = st.sidebar.checkbox(
+            "Also group by date?",
+            value=False
+        )
+        if also_group_by_date:
+            groupby_select = ['date', 'name']
+
+        df = names_df.groupby(groupby_select)['person'].count().reset_index()
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
+        if select_person:
+            df = df[df['name']==select_person]
 
     elif "location" in groupby_select:
         df = names_df.groupby("location")["person"].count().reset_index()
@@ -218,6 +235,28 @@ def main():
 
     else:
         df = dated_cheki_df
+        df['date'] = df['date'].dt.strftime("%Y-%m-%d")
+        if select_person:
+            temp_dfs = []
+            name_cols = [col for col in df.columns if 'name' in col]
+            for col in name_cols:
+                 temp_dfs.append(df[df[col].str.contains(select_person)])
+            df = pd.concat(temp_dfs)
+            
+            df = df.replace("", np.nan)
+            df = df.dropna(how='all', axis=1)
+            df = df.replace(np.nan, "")
+            df.sort_values('date', inplace=True)
+
+        also_group_by_date = st.sidebar.checkbox(
+            "Also group by date?",
+            value=False
+        )
+        if also_group_by_date:
+            groupby_select = ['date']
+            df = df.groupby(groupby_select)['note'].count().reset_index()
+            df = df.rename(columns={"note": "count"})
+            
 
     if plot_type == "dataframe":
         st.dataframe(df)
@@ -262,6 +301,8 @@ def main():
             fig = px.pie(df, values="person")
 
         st.plotly_chart(fig)
+
+    st.write(f"Total values: {len(df)}")
 
 
 if __name__ == "__main__":
