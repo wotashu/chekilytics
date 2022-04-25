@@ -6,7 +6,6 @@ import gspread
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from soupsieve import select
 import streamlit as st
 from google.oauth2 import service_account
 import matplotlib.colors as mcolors
@@ -40,6 +39,8 @@ COLOR_DESCRETE_MAP = {
     "Joyce": "green",
     "木戸怜緒奈": "cyan",
     "原田真帆": "coral",
+    "侑之りせ": "white",
+    "南 歩唯": "pink",
 }
 
 xkcd_colors = {
@@ -194,12 +195,10 @@ def main():
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
 
-    all_persons = person_df['name'].sort_values().values
-
+    all_persons = person_df["name"].sort_values().values
 
     select_person = st.sidebar.selectbox(
-        "Search for a name",
-        np.insert(all_persons, 0, '')
+        "Search for a name", np.insert(all_persons, 0, "")
     )
 
     groupby_select = st.sidebar.selectbox(
@@ -207,25 +206,23 @@ def main():
         ("name", "cheki_id", "location"),
     )
 
-
-    if groupby_select:
-        plot_type = st.sidebar.selectbox(
-            "Pick a plot type", ("dataframe", "bar", "pie")
-        )
+    plot_type = "dataframe"
 
     if "name" in groupby_select:
-        also_group_by_date = st.sidebar.checkbox(
-            "Also group by date?",
-            value=False
-        )
+        also_group_by_date = st.sidebar.checkbox("Also group by date?", value=False)
         if also_group_by_date:
-            groupby_select = ['date', 'name']
+            groupby_select = ["date", "name"]
 
-        df = names_df.groupby(groupby_select)['person'].count().reset_index()
+        df = names_df.groupby(groupby_select)["person"].count().reset_index()
         df = df.rename(columns={"person": "count"})
         df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
         if select_person:
-            df = df[df['name']==select_person]
+            df = df[df["name"] == select_person]
+
+        if groupby_select:
+            plot_type = st.sidebar.selectbox(
+                "Pick a plot type", ("dataframe", "bar", "pie")
+            )
 
     elif "location" in groupby_select:
         df = names_df.groupby("location")["person"].count().reset_index()
@@ -233,33 +230,37 @@ def main():
         df = df.sort_values(by="count", ascending=False)
         df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
 
+        if groupby_select:
+            plot_type = st.sidebar.selectbox(
+                "Pick a plot type", ("dataframe", "bar", "pie")
+            )
     else:
         df = dated_cheki_df
-        df['date'] = df['date'].dt.strftime("%Y-%m-%d")
+        df = df[
+            (df.date >= pd.to_datetime(first_date))
+            & (df.date <= pd.to_datetime(last_date))
+        ]
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         if select_person:
             temp_dfs = []
-            name_cols = [col for col in df.columns if 'name' in col]
+            name_cols = [col for col in df.columns if "name" in col]
             for col in name_cols:
-                 temp_dfs.append(df[df[col].str.contains(select_person)])
+                temp_dfs.append(df[df[col].str.contains(select_person)])
             df = pd.concat(temp_dfs)
-            
-            df = df.replace("", np.nan)
-            df = df.dropna(how='all', axis=1)
-            df = df.replace(np.nan, "")
-            df.sort_values('date', inplace=True)
 
-        also_group_by_date = st.sidebar.checkbox(
-            "Also group by date?",
-            value=False
-        )
+            df = df.replace("", np.nan)
+            df = df.dropna(how="all", axis=1)
+            df = df.replace(np.nan, "")
+            df.sort_values("date", inplace=True)
+
+        also_group_by_date = st.sidebar.checkbox("Also group by date?", value=False)
         if also_group_by_date:
-            groupby_select = ['date']
-            df = df.groupby(groupby_select)['note'].count().reset_index()
+            groupby_select = ["date"]
+            df = df.groupby(groupby_select)["note"].count().reset_index()
             df = df.rename(columns={"note": "count"})
-            
 
     if plot_type == "dataframe":
-        st.dataframe(df)
+        st.dataframe(df, 800, 800)
 
     elif plot_type in ["bar", "pie"]:
         if groupby_select:
@@ -281,7 +282,6 @@ def main():
                         y="count",
                         x=groupby_select[0],
                         color="count",
-                        # text=groupby_select[1],
                     )
                 elif plot_type == "pie":
                     if "color" in df.columns:
