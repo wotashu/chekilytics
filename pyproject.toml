@@ -5,7 +5,7 @@ description = ""
 authors = ["Jonathan <jolin3apa@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 streamlit = "^1.4.0"
 pandas = "^1.3.5"
 plotly = "^5.5.0"
