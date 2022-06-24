@@ -1,6 +1,5 @@
 import datetime
 from logging import exception
-from typing import List
 
 import gspread
 import numpy as np
@@ -101,12 +100,15 @@ def get_dates(df):
 
 
 def group_cheki_by_name(df):
+    name_cols = [col for col in df.columns if "name" in col]
     chekis = []
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
+        name_count = len(list(filter(None, row[name_cols].values)))
         for col in df.columns:
             if (row[col] is not np.nan) and ("name" in col) and (row[col]):
                 chekis.append(
                     {
+                        "cheki_id": idx,
                         "date": row["date"].date(),
                         "person": row[col],
                         "location": row["location"],
@@ -114,12 +116,13 @@ def group_cheki_by_name(df):
                         "month": row["date"].month,
                         "name": split_name_group(row[col])[0],
                         "group": split_name_group(row[col])[1],
+                        "n_shown": name_count, 
                     }
                 )
     return pd.DataFrame(chekis)
 
 
-def split_name_group(person: str) -> List[str]:
+def split_name_group(person: str) -> list[str]:
     split_result = person.split("@")
     if len(split_result) == 1:
         name = " ".join(split_result[0].split())
@@ -212,10 +215,17 @@ def main():
         also_group_by_date = st.sidebar.checkbox("Also group by date?", value=False)
         if also_group_by_date:
             groupby_select = ["date", "name"]
-
-        df = names_df.groupby(groupby_select)["person"].count().reset_index()
-        df = df.rename(columns={"person": "count"})
-        df = df.sort_values(by="count", ascending=False).reset_index(drop=True)
+            sort_level = 2
+        else:
+            groupby_select = ["name"]
+            sort_level = 1
+        n_shown_columns = sorted(names_df.n_shown.unique())
+        df = names_df.groupby(groupby_select+['n_shown'])["person"].count().sort_index(level=sort_level).reset_index()
+        df = df.pivot(index=groupby_select, columns="n_shown", values="person").fillna(0).astype(int)
+        df['total'] = df.sum(axis=1)
+        df = df[['total']+n_shown_columns]
+        # df = df.rename(columns={"person": "count"})
+        df = df.sort_values(by=["total"]+n_shown_columns, ascending=False).reset_index()
         if select_person:
             df = df[df["name"] == select_person]
 
