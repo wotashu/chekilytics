@@ -17,7 +17,7 @@ def get_worksheet(url, sheet_num=0):
 
 
 @st.cache(ttl=600, allow_output_mutation=True)
-def get_worksheet_location(url, sheet_num=2):
+def get_worksheet_location(url, sheet_num=3):
     worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
