@@ -1,102 +1,14 @@
 import datetime
 from logging import exception
 
-import gspread
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from google.oauth2 import service_account
-import matplotlib.colors as mcolors
 
+from loaders import get_worksheet, get_worksheet_location, get_datetime_cols
+from figures import get_bar_fig, get_pie_fig
 
-COLOR_DESCRETE_MAP = {
-    "Suzy": "red",
-    "OTHERS": "grey",
-    "七瀬千夏": "red",
-    "天音ゆめ": "lavender",
-    "恵深あむ": "yellow",
-    "楠木りほ": "cyan",
-    "大西春菜": "blue",
-    "椎名まどか": "cyan",
-    "中谷亜優": "white",
-    "石田綾音": "fuchsia",
-    "濱崎みき": "white",
-    "瀬乃悠月": "crimson",
-    "望月紗奈": "pink",
-    "音羽のあ": "blue",
-    "火野快飛": "azure",
-    "メグ・ピッチ・オリオン": "lime",
-    "コイヌ フユ": "yellow",
-    "涼乃みほ": "lightblue",
-    "松島朱里": "red",
-    "星名 夢音": "lightgreen",
-    "雨宮れいな": "white",
-    "岬あやめ": "yellow",
-    "鳴上綺羅": "lightblue",
-    "桜衣みゆな": "pink",
-    "Joyce": "green",
-    "木戸怜緒奈": "cyan",
-    "原田真帆": "coral",
-    "侑之りせ": "white",
-    "南 歩唯": "pink",
-}
-
-xkcd_colors = {
-    name: mcolors.XKCD_COLORS[f"xkcd:{color_name}"].upper()
-    for name, color_name in COLOR_DESCRETE_MAP.items()
-}
-
-
-def get_google_conn():
-    # Create a connection object.
-    credentials = service_account.Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-        ],
-    )
-    return gspread.authorize(credentials)
-
-
-gc = get_google_conn()
-
-
-# Uses st.cache to only rerun when the query changes or after 10 min.
-@st.cache(ttl=600, allow_output_mutation=True)
-def get_worksheet(url, sheet_num=0):
-    worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
-    df = pd.DataFrame(worksheet.get_all_values())
-    df.columns = df.iloc[0]
-    df.drop(df.index[0], inplace=True)
-    df.columns = [col.lower() for col in df.columns]
-    return df
-
-
-@st.cache(ttl=600, allow_output_mutation=True)
-def get_worksheet_location(url, sheet_num=2):
-    worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
-    df = pd.DataFrame(worksheet.get_all_values())
-    df.columns = df.iloc[0]
-    df.columns = [col.lower() for col in df.columns]
-    df.drop(df.index[0], inplace=True)
-    return df
-
-
-@st.cache(ttl=600, allow_output_mutation=True)
-def get_worksheet_names(url, sheet_num=1):
-    worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
-    df = pd.DataFrame(worksheet.get_all_values())
-    df.columns = df.iloc[0]
-    df.drop(df.index[0], inplace=True)
-    return df
-
-
-def get_dates(df):
-    df["date"] = pd.to_datetime(df["date"])
-    df["month"] = df["date"].dt.month
-    df["year"] = df["date"].dt.year
-    return df
 
 
 def group_cheki_by_name(df):
@@ -116,7 +28,7 @@ def group_cheki_by_name(df):
                         "month": row["date"].month,
                         "name": split_name_group(row[col])[0],
                         "group": split_name_group(row[col])[1],
-                        "n_shown": name_count, 
+                        "n_shown": name_count,
                     }
                 )
     return pd.DataFrame(chekis)
@@ -135,30 +47,6 @@ def split_name_group(person: str) -> list[str]:
         raise exception
 
 
-def get_bar_fig(df, **kwargs):
-    return px.bar(
-        df.sort_values(by="count", ascending=False),
-        x="count",
-        y="name",
-        color="name",
-        text="count",
-        title=f"結果: {df['count'].sum()}枚数",
-        color_discrete_map=xkcd_colors,
-    )
-
-
-def get_pie_fig(df):
-    fig = px.pie(
-        df.sort_values(by="count", ascending=True),
-        names="name",
-        values="count",
-        color="name",
-        color_discrete_map=xkcd_colors,
-    )
-    fig.update_traces(textposition="inside", textinfo="value+label")
-    return fig
-
-
 def get_cutoff_data(df, cutoff: int):
     df_top = df[df["count"] >= cutoff].reset_index(drop=True)
     df_bottom = df[df["count"] < cutoff]
@@ -169,11 +57,15 @@ def get_cutoff_data(df, cutoff: int):
     df_top = pd.concat([df_top, others_df], axis=0)
     return df_top
 
+def get_all_names(df: pd.DataFrame)->list[str]:
+
+    return sorted([name for name in df.name1.unique() if name != ""])
+
 
 def main():
     sheet_url = st.secrets["private_gsheets_url"]
     cheki_df = get_worksheet(sheet_url, 0)
-    dated_cheki_df = get_dates(cheki_df)
+    dated_cheki_df = get_datetime_cols(cheki_df)
     names_df = group_cheki_by_name(dated_cheki_df)
     person_df = get_worksheet(sheet_url, 1)
     venue_df = get_worksheet_location(sheet_url, 2)
@@ -198,7 +90,8 @@ def main():
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
 
-    all_persons = person_df["name"].sort_values().values
+    all_persons = get_all_names(person_df)
+    print(all_persons[:10])
 
     select_person = st.sidebar.selectbox(
         "Search for a name", np.insert(all_persons, 0, "")
@@ -220,12 +113,23 @@ def main():
             groupby_select = ["name"]
             sort_level = 1
         n_shown_columns = sorted(names_df.n_shown.unique())
-        df = names_df.groupby(groupby_select+['n_shown'])["person"].count().sort_index(level=sort_level).reset_index()
-        df = df.pivot(index=groupby_select, columns="n_shown", values="person").fillna(0).astype(int)
-        df['total'] = df.sum(axis=1)
-        df = df[['total']+n_shown_columns]
+        df = (
+            names_df.groupby(groupby_select + ["n_shown"])["person"]
+            .count()
+            .sort_index(level=sort_level)
+            .reset_index()
+        )
+        df = (
+            df.pivot(index=groupby_select, columns="n_shown", values="person")
+            .fillna(0)
+            .astype(int)
+        )
+        df["total"] = df.sum(axis=1)
+        df = df[["total"] + n_shown_columns]
         # df = df.rename(columns={"person": "count"})
-        df = df.sort_values(by=["total"]+n_shown_columns, ascending=False).reset_index()
+        df = df.sort_values(
+            by=["total"] + n_shown_columns, ascending=False
+        ).reset_index()
         if select_person:
             df = df[df["name"] == select_person]
 
