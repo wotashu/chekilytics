@@ -68,7 +68,7 @@ def main():
     dated_cheki_df = get_datetime_cols(cheki_df)
     names_df = group_cheki_by_name(dated_cheki_df)
     person_df = get_worksheet(sheet_url, 1)
-    venue_df = get_worksheet_location(sheet_url, 2)
+    venue_df = get_worksheet_location(sheet_url, 3)
 
     earliest_date = names_df.date.min()
     today = datetime.datetime.today().date()
