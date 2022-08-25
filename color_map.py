@@ -20,7 +20,7 @@ COLOR_DESCRETE_MAP = {
     "メグ・ピッチ・オリオン": "lime",
     "コイヌ フユ": "yellow",
     "涼乃みほ": "lightblue",
-    "松島朱里": "red",
+    "松島朱里": "green",
     "星名 夢音": "lightgreen",
     "雨宮れいな": "white",
     "岬あやめ": "yellow",
@@ -31,6 +31,9 @@ COLOR_DESCRETE_MAP = {
     "原田真帆": "coral",
     "侑之りせ": "white",
     "南 歩唯": "pink",
+    "昊乃ひな": "orange",
+    "日向なの": "orange",
+    "きゃりー": "yellow"
 }
 
 

@@ -6,21 +6,21 @@ from color_map import xkcd_colors
 
 def get_bar_fig(df: pd.DataFrame, **kwargs):
     return px.bar(
-        df.sort_values(by="count", ascending=False),
-        x="count",
+        df.sort_values(by="total", ascending=False),
+        x="total",
         y="name",
         color="name",
-        text="count",
-        title=f"結果: {df['count'].sum()}枚数",
+        text="total",
+        title=f"結果: {df['total'].sum()}枚数",
         color_discrete_map=xkcd_colors,
     )
 
 
 def get_pie_fig(df: pd.DataFrame):
     fig = px.pie(
-        df.sort_values(by="count", ascending=True),
+        df.sort_values(by="total", ascending=True),
         names="name",
-        values="count",
+        values="total",
         color="name",
         color_discrete_map=xkcd_colors,
     )

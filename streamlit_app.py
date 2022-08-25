@@ -48,11 +48,11 @@ def split_name_group(person: str) -> list[str]:
 
 
 def get_cutoff_data(df, cutoff: int):
-    df_top = df[df["count"] >= cutoff].reset_index(drop=True)
-    df_bottom = df[df["count"] < cutoff]
-    others_count = df_bottom["count"].sum()
+    df_top = df[df["total"] >= cutoff].reset_index(drop=True)
+    df_bottom = df[df["total"] < cutoff]
+    others_count = df_bottom["total"].sum()
     others_df = pd.DataFrame(
-        {"count": [others_count], "name": ["OTHERS"], "group": ["OTHERS"]}
+        {"total": [others_count], "name": ["OTHERS"], "group": ["OTHERS"]}
     )
     df_top = pd.concat([df_top, others_df], axis=0)
     return df_top
@@ -140,8 +140,8 @@ def main():
 
     elif "location" in groupby_select:
         df = names_df.groupby("location")["person"].count().reset_index()
-        df = df.rename(columns={"person": "count"})
-        df = df.sort_values(by="count", ascending=False)
+        df = df.rename(columns={"person": "total"})
+        df = df.sort_values(by="total", ascending=False)
         df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
 
         if groupby_select:
@@ -171,16 +171,16 @@ def main():
         if also_group_by_date:
             groupby_select = ["date"]
             df = df.groupby(groupby_select)["note"].count().reset_index()
-            df = df.rename(columns={"note": "count"})
+            df = df.rename(columns={"note": "total"})
 
     if plot_type == "dataframe":
         st.dataframe(df, 800, 800)
 
     elif plot_type in ["bar", "pie"]:
         if groupby_select:
-            max_value = int(df["count"].max())
+            max_value = int(df["total"].max())
             cutoff = st.slider(
-                "Cutoff for other", 0, max_value, round(df["count"].median())
+                "Cutoff for other", 0, max_value, round(df["total"].median())
             )
             if cutoff > 0:
                 df = get_cutoff_data(df, cutoff)
@@ -192,24 +192,24 @@ def main():
             else:
                 if plot_type == "bar":
                     fig = px.bar(
-                        df.sort_values(by="count", ascending=False),
-                        y="count",
+                        df.sort_values(by="total", ascending=False),
+                        y="total",
                         x=groupby_select[0],
-                        color="count",
+                        color="total",
                     )
                 elif plot_type == "pie":
                     if "color" in df.columns:
                         fig = px.pie(
-                            df.sort_values(by="count", ascending=False),
+                            df.sort_values(by="total", ascending=False),
                             names=groupby_select[0],
-                            values="count",
+                            values="total",
                             color="color",
                         )
                     else:
                         fig = px.pie(
-                            df.sort_values(by="count", ascending=False),
+                            df.sort_values(by="total", ascending=False),
                             names=groupby_select[0],
-                            values="count",
+                            values="total",
                         )
         else:
             fig = px.pie(df, values="person")
