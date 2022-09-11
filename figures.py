@@ -1,6 +1,5 @@
 import pandas as pd
 import plotly.express as px
-
 from color_map import xkcd_colors
 
 

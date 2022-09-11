@@ -1,6 +1,6 @@
-from connections import get_google_conn
-import streamlit as st
 import pandas as pd
+import streamlit as st
+from connections import get_google_conn
 
 gc = get_google_conn()
 

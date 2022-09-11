@@ -5,10 +5,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-
-from loaders import get_worksheet, get_worksheet_location, get_datetime_cols
 from figures import get_bar_fig, get_pie_fig
-
+from loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
 
 def group_cheki_by_name(df):
@@ -57,7 +55,8 @@ def get_cutoff_data(df, cutoff: int):
     df_top = pd.concat([df_top, others_df], axis=0)
     return df_top
 
-def get_all_names(df: pd.DataFrame)->list[str]:
+
+def get_all_names(df: pd.DataFrame) -> list[str]:
 
     return sorted([name for name in df.name1.unique() if name != ""])
 

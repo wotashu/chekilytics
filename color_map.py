@@ -1,6 +1,5 @@
 import matplotlib.colors as mcolors
 
-
 COLOR_DESCRETE_MAP = {
     "Suzy": "red",
     "OTHERS": "grey",
@@ -34,8 +33,7 @@ COLOR_DESCRETE_MAP = {
     "昊乃ひな": "orange",
     "日向なの": "orange",
     "きゃりー": "yellow",
-    "もしかして、るか": "yellow"
-
+    "もしかして、るか": "yellow",
 }
 
 
