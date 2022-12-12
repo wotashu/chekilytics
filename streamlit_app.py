@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
 from figures import get_bar_fig, get_pie_fig
 from loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
@@ -90,7 +91,6 @@ def main():
     names_df = names_df[names_df.date.between(first_date, last_date)]
 
     all_persons = get_all_names(person_df)
-    print(all_persons[:10])
 
     select_person = st.sidebar.selectbox(
         "Search for a name", np.insert(all_persons, 0, "")
@@ -129,6 +129,7 @@ def main():
         df = df.sort_values(
             by=["total"] + n_shown_columns, ascending=False
         ).reset_index()
+        df.columns = [str(col) for col in df.columns]
         if select_person:
             df = df[df["name"] == select_person]
 

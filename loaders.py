@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+
 from connections import get_google_conn
 
 gc = get_google_conn()
@@ -12,7 +13,7 @@ def get_worksheet(url, sheet_num=0):
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
     df.drop(df.index[0], inplace=True)
-    df.columns = [col.lower() for col in df.columns]
+    df.columns = [str(col).lower() for col in df.columns]
     return df
 
 
