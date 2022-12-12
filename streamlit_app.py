@@ -1,5 +1,4 @@
 import datetime
-from logging import exception
 
 import numpy as np
 import pandas as pd
@@ -10,7 +9,7 @@ from figures import get_bar_fig, get_pie_fig
 from loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
 
-def group_cheki_by_name(df):
+def group_cheki_by_name(df: pd.DataFrame) -> pd.DataFrame:
     name_cols = [col for col in df.columns if "name" in col]
     chekis = []
     for idx, row in df.iterrows():
@@ -38,15 +37,14 @@ def split_name_group(person: str) -> list[str]:
     if len(split_result) == 1:
         name = " ".join(split_result[0].split())
         return [name, name]
-    elif len(split_result) == 2:
+    if len(split_result) == 2:
         name = " ".join(split_result[0].split())
         group = " ".join(split_result[1].split())
         return [name, group]
-    else:
-        raise exception
+    return []
 
 
-def get_cutoff_data(df, cutoff: int):
+def get_cutoff_data(df: pd.DataFrame, cutoff: int) -> pd.DataFrame:
     df_top = df[df["total"] >= cutoff].reset_index(drop=True)
     df_bottom = df[df["total"] < cutoff]
     others_count = df_bottom["total"].sum()
@@ -58,7 +56,6 @@ def get_cutoff_data(df, cutoff: int):
 
 
 def get_all_names(df: pd.DataFrame) -> list[str]:
-
     return sorted([name for name in df.name1.unique() if name != ""])
 
 
