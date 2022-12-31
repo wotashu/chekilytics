@@ -1,10 +1,10 @@
 import matplotlib.colors as mcolors
 
 COLOR_DESCRETE_MAP = {
-    "Suzy": "red",
+    "Suzy": "lavender",
     "OTHERS": "grey",
     "七瀬千夏": "red",
-    "天音ゆめ": "lavender",
+    "天音ゆめ": "purple",
     "恵深あむ": "red",
     "楠木りほ": "cyan",
     "雅春奈": "red",
@@ -21,7 +21,7 @@ COLOR_DESCRETE_MAP = {
     "涼乃みほ": "cyan",
     "松島朱里": "green",
     "星名 夢音": "lightgreen",
-    "雨宮れいな": "white",
+    "雨宮れいな": "lavender",
     "岬あやめ": "yellow",
     "鳴上綺羅": "cyan",
     "桜衣みゆな": "pink",
@@ -34,6 +34,12 @@ COLOR_DESCRETE_MAP = {
     "日向なの": "orange",
     "きゃりー": "yellow",
     "もしかして、るか": "yellow",
+    "Juri": "purple",
+    "Tina": "yellow",
+    "日向さや": "pink",
+    "ツキナミ ミツキ": "lavender",
+    "ハッパ セリ": "purple",
+    "小上がお": "lightgreen",
 }
 
 

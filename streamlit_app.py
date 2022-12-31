@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import pydeck as pdk
 import streamlit as st
 
 from figures import get_bar_fig, get_pie_fig
@@ -59,15 +60,8 @@ def get_all_names(df: pd.DataFrame) -> list[str]:
     return sorted([name for name in df.name1.unique() if name != ""])
 
 
-def main():
-    sheet_url = st.secrets["private_gsheets_url"]
-    cheki_df = get_worksheet(sheet_url, 0)
-    dated_cheki_df = get_datetime_cols(cheki_df)
-    names_df = group_cheki_by_name(dated_cheki_df)
-    person_df = get_worksheet(sheet_url, 1)
-    venue_df = get_worksheet_location(sheet_url, 3)
-
-    earliest_date = names_df.date.min()
+def get_dates(input_df) -> tuple[datetime.date, datetime.date]:
+    earliest_date = input_df.date.min()
     today = datetime.datetime.today().date()
     last_date = today
     first_date = datetime.date(today.year, 1, 1)
@@ -83,6 +77,19 @@ def main():
         first_date = date_selector[0]
         last_date = date_selector[1]
 
+    return first_date, last_date
+
+
+def main():
+    sheet_url = st.secrets["private_gsheets_url"]
+    cheki_df = get_worksheet(sheet_url, 0)
+    dated_cheki_df = get_datetime_cols(cheki_df)
+    names_df = group_cheki_by_name(dated_cheki_df)
+    person_df = get_worksheet(sheet_url, 1)
+    venue_df = get_worksheet_location(sheet_url, 3)
+
+    first_date, last_date = get_dates(names_df)
+
     st.write("Selected dates are", first_date, last_date)
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
@@ -93,14 +100,15 @@ def main():
         "Search for a name", np.insert(all_persons, 0, "")
     )
 
-    groupby_select = st.sidebar.selectbox(
+    groupby_select = st.selectbox(
         "Choose Columns to group by",
-        ("name", "cheki_id", "location"),
+        ("name", "cheki_id"),
     )
 
     plot_type = "dataframe"
 
     if "name" in groupby_select:
+
         also_group_by_date = st.sidebar.checkbox("Also group by date?", value=False)
         if also_group_by_date:
             groupby_select = ["date", "name"]
@@ -130,28 +138,60 @@ def main():
         if select_person:
             df = df[df["name"] == select_person]
 
-        if groupby_select:
-            plot_type = st.sidebar.selectbox(
-                "Pick a plot type", ("dataframe", "bar", "pie")
-            )
+        tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
 
-    elif "location" in groupby_select:
-        df = names_df.groupby("location")["person"].count().reset_index()
-        df = df.rename(columns={"person": "total"})
-        df = df.sort_values(by="total", ascending=False)
-        df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
+        with tab2:
+            st.dataframe(df, 800, 800)
 
-        if groupby_select:
-            plot_type = st.sidebar.selectbox(
-                "Pick a plot type", ("dataframe", "bar", "pie")
-            )
-    else:
+        with tab1:
+            max_value = int(df["total"].max())
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                plot_type = st.selectbox("Pick a plot type", ("bar", "pie"))
+
+            with col2:
+                cutoff = st.number_input(
+                    "Cutoff for other",
+                    min_value=0,
+                    max_value=max_value,
+                    value=round(df["total"].median()),
+                )
+                if cutoff > 0:
+                    df = get_cutoff_data(df, cutoff)
+            with col3:
+                top_n = st.number_input(
+                    "Keep top n",
+                    step=1,
+                    min_value=0,
+                    max_value=len(df) + 1,
+                )
+
+            if top_n:
+                df = df.head(top_n)
+
+            fig = None
+
+            if plot_type == "bar":
+                fig = get_bar_fig(df)
+            elif plot_type == "pie":
+                fig = get_pie_fig(df)
+            else:
+                pass
+
+            if fig:
+                st.plotly_chart(fig)
+
+    elif groupby_select == "cheki_id":
         df = dated_cheki_df
         df = df[
             (df.date >= pd.to_datetime(first_date))
             & (df.date <= pd.to_datetime(last_date))
         ]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+        df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
+
         if select_person:
             temp_dfs = []
             name_cols = [col for col in df.columns if "name" in col]
@@ -170,48 +210,73 @@ def main():
             df = df.groupby(groupby_select)["note"].count().reset_index()
             df = df.rename(columns={"note": "total"})
 
-    if plot_type == "dataframe":
-        st.dataframe(df, 800, 800)
+        tab1, tab2 = st.tabs(["🗺️ Map", "🗃 Data"])
 
-    elif plot_type in ["bar", "pie"]:
-        if groupby_select:
-            max_value = int(df["total"].max())
-            cutoff = st.slider(
-                "Cutoff for other", 0, max_value, round(df["total"].median())
+        with tab2:
+            st.dataframe(df, 800, 800)
+
+        with tab1:
+            df = df[["location", "latitude", "longitude"]]
+            df = df.replace("", np.nan)
+            df = df.dropna(axis=0, how="any")
+            df = df.reset_index(drop=True)
+
+            print(df.shape)
+            df["latitude"] = df["latitude"].astype(float)
+            df["longitude"] = df["longitude"].astype(float)
+
+            map_type = st.sidebar.selectbox("Pick a map layer", ("Hexagon", "Scatter"))
+
+            layers = []
+            pitch = 0
+            if map_type == "Hexagon":
+                pitch = 50
+                layers.append(
+                    pdk.Layer(
+                        "HexagonLayer",
+                        data=df,
+                        get_position="[longitude, latitude]",
+                        elevation_scale=10,
+                        elevation_range=[0, 1000],
+                        pickable=True,
+                        extruded=True,
+                        on_click=True,
+                        radius=50,
+                    ),
+                )
+            elif map_type == "Scatter":
+                layers.append(
+                    pdk.Layer(
+                        "ScatterplotLayer",
+                        df,
+                        opacity=0.5,
+                        get_position="[longitude, latitude]",
+                        get_fill_color="[200, 30, 0, 160]",
+                        get_radius="[location]",
+                        pickable=True,
+                        min_radius_pixels=10,
+                        radiusScale=100,
+                        max_radius_pixels=200,
+                        on_click=True,
+                    ),
+                )
+
+            st.pydeck_chart(
+                pdk.Deck(
+                    map_style=None,
+                    initial_view_state=pdk.ViewState(
+                        latitude=df["latitude"][0],
+                        longitude=df["longitude"][0],
+                        zoom=11,
+                        pitch=pitch,
+                    ),
+                    tooltip={
+                        "html": "<b>Location:</b> {location}",
+                        "style": {"color": "white"},
+                    },
+                    layers=layers,
+                )
             )
-            if cutoff > 0:
-                df = get_cutoff_data(df, cutoff)
-            if "name" in groupby_select:
-                if plot_type == "bar":
-                    fig = get_bar_fig(df)
-                elif plot_type == "pie":
-                    fig = get_pie_fig(df)
-            else:
-                if plot_type == "bar":
-                    fig = px.bar(
-                        df.sort_values(by="total", ascending=False),
-                        y="total",
-                        x=groupby_select[0],
-                        color="total",
-                    )
-                elif plot_type == "pie":
-                    if "color" in df.columns:
-                        fig = px.pie(
-                            df.sort_values(by="total", ascending=False),
-                            names=groupby_select[0],
-                            values="total",
-                            color="color",
-                        )
-                    else:
-                        fig = px.pie(
-                            df.sort_values(by="total", ascending=False),
-                            names=groupby_select[0],
-                            values="total",
-                        )
-        else:
-            fig = px.pie(df, values="person")
-
-        st.plotly_chart(fig)
 
     st.write(f"Total values: {len(df)}")
 
