@@ -37,9 +37,16 @@ COLOR_DESCRETE_MAP = {
     "Juri": "purple",
     "Tina": "yellow",
     "日向さや": "pink",
-    "ツキナミ ミツキ": "lavender",
+    "ツキナミ ミツキ": "pink",
     "ハッパ セリ": "purple",
     "小上がお": "lightgreen",
+    "ナウ リアル": "blue",
+    "マユ チャン": "white",
+    "茜れう": "purple",
+    "小雨にゃせ": "pink",
+    "黑澤璃衣": "yellow",
+    "星奈りゅな": "orange",
+    "わたあめ ふわり": "pink",
 }
 
 
