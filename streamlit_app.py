@@ -89,17 +89,20 @@ def main():
     person_df = get_worksheet(sheet_url, 1)
     venue_df = get_worksheet_location(sheet_url, 3)
 
-    first_date, last_date = get_dates(names_df)
+    col1, col2 = st.columns(2)
 
-    st.write("Selected dates are", first_date, last_date)
+    with col1:
+        first_date, last_date = get_dates(names_df)
+        st.write("Selected dates are", first_date, last_date)
+
+    with col2:
+        all_persons = get_all_names(person_df)
+        selected_persons = st.multiselect(
+            "Search for a name", np.insert(all_persons, 0, "")
+        )
+        st.write(f"Selected {selected_persons}")
 
     names_df = names_df[names_df.date.between(first_date, last_date)]
-
-    all_persons = get_all_names(person_df)
-
-    select_person = st.sidebar.selectbox(
-        "Search for a name", np.insert(all_persons, 0, "")
-    )
 
     groupby_select = st.selectbox(
         "Choose Columns to group by",
@@ -110,7 +113,7 @@ def main():
 
     if "name" in groupby_select:
 
-        also_group_by_date = st.sidebar.checkbox("Also group by date?", value=False)
+        also_group_by_date = st.checkbox("Also group by date?", value=False)
         if also_group_by_date:
             groupby_select = ["date", "name"]
             sort_level = 2
@@ -136,52 +139,45 @@ def main():
             by=["total"] + n_shown_columns, ascending=False
         ).reset_index()
         df.columns = [str(col) for col in df.columns]
-        if select_person:
-            df = df[df["name"] == select_person]
+        if selected_persons:
+            df = df[df["name"].isin(selected_persons)]
 
-        tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
+        chart_tab, data_tab = st.tabs(["📈 Chart", "🗃 Data"])
 
-        with tab2:
+        with data_tab:
             st.dataframe(df, 800, 800)
 
-        with tab1:
+        with chart_tab:
             max_value = int(df["total"].max())
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
 
             with col1:
-                plot_type = st.selectbox("Pick a plot type", ("bar", "pie"))
-
-            with col2:
+                cutoff_value = 0
+                if len(selected_persons) >= 12:
+                    cutoff_value = round(df["total"].median())
                 cutoff = st.number_input(
                     "Cutoff for other",
                     min_value=0,
                     max_value=max_value,
-                    value=round(df["total"].median()),
+                    value=cutoff_value,
                 )
                 if cutoff > 0:
                     df = get_cutoff_data(df, cutoff)
-            with col3:
+            with col2:
                 top_n = st.number_input(
-                    "Keep top n",
-                    step=1,
-                    min_value=0,
-                    max_value=len(df) + 1,
+                    "Keep top n", step=1, min_value=0, max_value=len(df) + 1, value=0
                 )
 
             if top_n:
                 df = df.head(top_n)
 
-            fig = None
-
-            if plot_type == "bar":
+            bar_tab, pie_tab = st.tabs(["📊bar", "🥧pie"])
+            with bar_tab:
                 fig = get_bar_fig(df)
-            elif plot_type == "pie":
+                st.plotly_chart(fig)
+            with pie_tab:
                 fig = get_pie_fig(df)
-            else:
-                pass
-
-            if fig:
                 st.plotly_chart(fig)
 
     elif groupby_select == "cheki_id":
@@ -193,11 +189,12 @@ def main():
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df = pd.merge(df, venue_df, how="left", left_on="location", right_on="location")
 
-        if select_person:
+        if selected_persons:
             temp_dfs = []
             name_cols = [col for col in df.columns if "name" in col]
             for col in name_cols:
-                temp_dfs.append(df[df[col].str.contains(select_person)])
+                for person in selected_persons:
+                    temp_dfs.append(df[df[col].str.contains(person)])
             df = pd.concat(temp_dfs)
 
             df = df.replace("", np.nan)
