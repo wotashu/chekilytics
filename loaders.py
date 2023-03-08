@@ -22,7 +22,7 @@ def get_worksheet_location(url, sheet_num=3):
     worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]
-    df.columns = [col.lower() for col in df.columns]
+    df.columns = ["_".join(col.lower().split()) for col in df.columns]
     df.drop(df.index[0], inplace=True)
     return df
 

@@ -2,11 +2,12 @@ import datetime
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import pydeck as pdk
 import streamlit as st
+from loguru import logger
 
 from figures import get_bar_fig, get_pie_fig
+from geo import get_map_layer
 from loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
 
@@ -216,67 +217,51 @@ def main():
             st.dataframe(df, 800, 800)
 
         with tab1:
-            df = df[["location", "latitude", "longitude"]]
+            logger.debug(f"DF preview: {df.head()}")
+            logger.debug(f"DF columns: {df.columns}")
+            logger.debug(f"DF shape: {df.shape}")
+
+            df_groupby = (
+                df.groupby("location")["date"]
+                .count()
+                .reset_index()
+                .rename(columns={"date": "count"})
+            )
+            logger.debug(f"CURRENT DF GROUPBY: {df_groupby}")
+            df = pd.merge(
+                df_groupby,
+                df[["location", "latitude", "longitude", "full_address"]],
+                how="inner",
+                on="location",
+            )
+            logger.debug(f"NOW the DF: {df.head()}")
+            # df = df[["location", "latitude", "longitude", "full_address"]]
             df = df.replace("", np.nan)
             df = df.dropna(axis=0, how="any")
-            df = df.reset_index(drop=True)
+            df.drop_duplicates(inplace=True)
+            # df = df.reset_index(drop=True)
 
-            print(df.shape)
             df["latitude"] = df["latitude"].astype(float)
             df["longitude"] = df["longitude"].astype(float)
 
-            map_type = st.sidebar.selectbox("Pick a map layer", ("Hexagon", "Scatter"))
+            (
+                heat_tab,
+                column_tab,
+                scatter_tab,
+            ) = st.tabs(["🔥Heatmap", "🏢Column", "⭕Scatter"])
 
-            layers = []
-            pitch = 0
-            if map_type == "Hexagon":
-                pitch = 50
-                layers.append(
-                    pdk.Layer(
-                        "HexagonLayer",
-                        data=df,
-                        get_position="[longitude, latitude]",
-                        elevation_scale=10,
-                        elevation_range=[0, 1000],
-                        pickable=True,
-                        extruded=True,
-                        on_click=True,
-                        radius=50,
-                    ),
-                )
-            elif map_type == "Scatter":
-                layers.append(
-                    pdk.Layer(
-                        "ScatterplotLayer",
-                        df,
-                        opacity=0.5,
-                        get_position="[longitude, latitude]",
-                        get_fill_color="[200, 30, 0, 160]",
-                        get_radius="[location]",
-                        pickable=True,
-                        min_radius_pixels=10,
-                        radiusScale=100,
-                        max_radius_pixels=200,
-                        on_click=True,
-                    ),
-                )
+            with heat_tab:
+                deck = get_map_layer(df=df, map_type="heat")
+                st.pydeck_chart(deck)
+            with column_tab:
+                deck = get_map_layer(df=df, map_type="column")
+                st.pydeck_chart(deck)
+            with scatter_tab:
+                deck = get_map_layer(df=df, map_type="scatter")
+                st.pydeck_chart(deck)
 
-            st.pydeck_chart(
-                pdk.Deck(
-                    map_style=None,
-                    initial_view_state=pdk.ViewState(
-                        latitude=df["latitude"][0],
-                        longitude=df["longitude"][0],
-                        zoom=11,
-                        pitch=pitch,
-                    ),
-                    tooltip={
-                        "html": "<b>Location:</b> {location}",
-                        "style": {"color": "white"},
-                    },
-                    layers=layers,
-                )
-            )
+            st.dataframe(df, use_container_width=True)
+            st.write(f"Total values: {len(df)}, count: {df['count'].sum()}")
 
     st.write(f"Total values: {len(df)}")
 
