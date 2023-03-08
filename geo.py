@@ -48,8 +48,8 @@ def get_map_layer(df: pd.DataFrame, map_type: str):
     return pdk.Deck(
         map_style=None,
         initial_view_state=pdk.ViewState(
-            latitude=35.652832,
-            longitude=139.839478,
+            latitude=35.678942,
+            longitude=139.737892,
             zoom=10,
             pitch=pitch,
         ),
