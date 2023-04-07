@@ -26,3 +26,13 @@ def get_pie_fig(df: pd.DataFrame):
     )
     fig.update_traces(textposition="inside", textinfo="value+label")
     return fig
+
+
+def get_tree_map(df: pd.DataFrame):
+    fig = px.treemap(
+        data_frame=df.sort_values(by="total", ascending=False),
+        names="name",
+        values="total",
+        color="name",
+        color_discrete_map=xkcd_colors,
+    )

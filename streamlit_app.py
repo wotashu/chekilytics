@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 from loguru import logger
 
-from figures import get_bar_fig, get_pie_fig
+import figures
 from geo import get_map_layer
 from loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
@@ -171,12 +171,15 @@ def main():
             if top_n:
                 df = df.head(top_n)
 
-            bar_tab, pie_tab = st.tabs(["📊bar", "🥧pie"])
+            treemap_tab, bar_tab, pie_tab = st.tabs(["🌳treemap", "📊bar", "🥧pie"])
+            with treemap_tab:
+                fig = figures.get_treemap_fig(df)
+                st.plotly_chart(fig)
             with bar_tab:
-                fig = get_bar_fig(df)
+                fig = figures.get_bar_fig(df)
                 st.plotly_chart(fig)
             with pie_tab:
-                fig = get_pie_fig(df)
+                fig = figures.get_pie_fig(df)
                 st.plotly_chart(fig)
 
     elif groupby_select == "cheki_id":
