@@ -28,8 +28,8 @@ def get_pie_fig(df: pd.DataFrame):
     return fig
 
 
-def get_tree_map(df: pd.DataFrame):
-    fig = px.treemap(
+def get_treemap_fig(df: pd.DataFrame):
+    return px.treemap(
         data_frame=df.sort_values(by="total", ascending=False),
         names="name",
         values="total",

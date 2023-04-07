@@ -111,7 +111,6 @@ def main():
     plot_type = "dataframe"
 
     if "name" in groupby_select:
-
         also_group_by_date = st.checkbox("Also group by date?", value=False)
         if also_group_by_date:
             groupby_select = ["date", "name"]
