@@ -47,6 +47,12 @@ COLOR_DESCRETE_MAP = {
     "黑澤璃衣": "yellow",
     "星奈りゅな": "orange",
     "わたあめ ふわり": "pink",
+    "月野綾音": "red",
+    "夢野なの": "lavender",
+    "鈴音かな": "yellow",
+    "翠月 ゆりな": "lightgreen",
+    "華乃井かほ": "orange",
+    "小島ももな": "pink",
 }
 
 

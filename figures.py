@@ -28,10 +28,13 @@ def get_pie_fig(df: pd.DataFrame):
     return fig
 
 
-def get_treemap_fig(df: pd.DataFrame):
+def get_treemap_fig(df: pd.DataFrame, use_groups: bool = True):
+    groupby_paths = ["name"]
+    if use_groups:
+        groupby_paths = ["group", "name"]
     return px.treemap(
         data_frame=df,
-        path=["group", "name"],
+        path=groupby_paths,
         values="total",
         color="name",
         color_discrete_map=xkcd_colors,
