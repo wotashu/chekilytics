@@ -100,7 +100,7 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         min_value=earliest_date,
         max_value=today,
     )
-    logger.debug(f"date_selector: {date_selector}")
+    logger.debug(f"date_selector: {date_selector}, shape: {len(date_selector)}")
 
     if isinstance(date_selector, date) or len(date_selector) < 2:
         return date_selector, today
