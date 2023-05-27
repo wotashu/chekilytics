@@ -120,43 +120,45 @@ def get_name_tab(
         st.dataframe(name_df, 800, 800)
 
     with chart_tab:
-        max_value = int(name_df["total"].max())
+        max_value = name_df["total"].max()
+        if max_value is not np.NaN:
+            max_value = int(name_df["total"].max())
 
-        col1, col2 = st.columns(2)
+            col1, col2 = st.columns(2)
 
-        with col1:
-            cutoff_value = 0
-            if len(selected_persons) >= 12:
-                cutoff_value = round(name_df["total"].median())
-            cutoff = st.number_input(
-                "Cutoff for other",
-                min_value=0,
-                max_value=max_value,
-                value=cutoff_value,
-            )
-            if cutoff > 0:
-                name_df = munge.get_cutoff_data(name_df, int(cutoff))
-        with col2:
-            top_n = st.number_input(
-                "Keep top n",
-                step=1,
-                min_value=0,
-                max_value=len(name_df) + 1,
-                value=0,
-            )
+            with col1:
+                cutoff_value = 0
+                if len(selected_persons) >= 12:
+                    cutoff_value = round(name_df["total"].median())
+                cutoff = st.number_input(
+                    "Cutoff for other",
+                    min_value=0,
+                    max_value=max_value,
+                    value=cutoff_value,
+                )
+                if cutoff > 0:
+                    name_df = munge.get_cutoff_data(name_df, int(cutoff))
+            with col2:
+                top_n = st.number_input(
+                    "Keep top n",
+                    step=1,
+                    min_value=0,
+                    max_value=len(name_df) + 1,
+                    value=0,
+                )
 
-        if top_n:
-            name_df = name_df.head(top_n)
+            if top_n:
+                name_df = name_df.head(top_n)
 
-        treemap_tab, bar_tab, pie_tab = st.tabs(["🌳treemap", "📊bar", "🥧pie"])
-        with treemap_tab:
-            use_groups = st.checkbox(label="Use Groups")
+            treemap_tab, bar_tab, pie_tab = st.tabs(["🌳treemap", "📊bar", "🥧pie"])
+            with treemap_tab:
+                use_groups = st.checkbox(label="Use Groups")
 
-            fig = figures.get_treemap_fig(name_df, use_groups=use_groups)
-            st.plotly_chart(fig)
-        with bar_tab:
-            fig = figures.get_bar_fig(name_df)
-            st.plotly_chart(fig)
-        with pie_tab:
-            fig = figures.get_pie_fig(name_df)
-            st.plotly_chart(fig)
+                fig = figures.get_treemap_fig(name_df, use_groups=use_groups)
+                st.plotly_chart(fig)
+            with bar_tab:
+                fig = figures.get_bar_fig(name_df)
+                st.plotly_chart(fig)
+            with pie_tab:
+                fig = figures.get_pie_fig(name_df)
+                st.plotly_chart(fig)

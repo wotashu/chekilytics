@@ -4,48 +4,50 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-class Performers(BaseModel):
+class Act(BaseModel):
+    act_id: str
     title: str
     agency: str | None = None
-    date_of_formation: date
+    date_of_formation: date | None = None
     date_of_disbandment: date | None = None
     alternative_titles: list[str] | None = None
 
 
-class Person(BaseModel):
-    name: str
-    date_of_birth: date
-
-
 class Character(BaseModel):
+    character_id: str
+    title: str
     name: str
-    group: Performers | None
-    person: Person
-    member_color: str | None = None
-    date_joined: date
-    date_left: date
+    act: str | None
+    member_colors: list[str] | None = None
+    date_joined: date | None = None
+    date_left: date | None = None
 
 
-class Location(BaseModel):
-    lat: str
-    lon: str
-    address: str
-    country: str
-    subdivision_1: str | None
-    subdivision_2: str | None
-    municipality: str | None
-    postal_code: str
+class Person(BaseModel):
+    person_id: str
+    title: str
+    name: str
+    date_of_birth: date | None = None
+    characters: list[Character]
 
 
 class Venue(BaseModel):
+    venue_id: str
     title: str
-    location: Location
+    latitude: str
+    longitude: str
+    full_address: str
+    postal_code: str | None
+    country: str | None
+    subdivision: str | None
+    municipality: str | None
+    neighborhood: str | None
 
 
 class Performance(BaseModel):
     start_time: datetime
     end_time: datetime
-    participants: list[Performers]
+    participants: list[Act]
 
 
 class Event(BaseModel):
@@ -56,12 +58,17 @@ class Event(BaseModel):
     participants: list[str]
 
 
+class Cost(BaseModel):
+    price: float = 0.0
+    currency: Literal["USD", "JPY", "EUR", "CND"] = "JPY"
+
+
 class Cheki(BaseModel):
     format: Literal["mini", "wide", "square"]
-    date: date
+    date: date | None
     event: Event | None
     venue: Venue | None
     subjects: list[Character]
-    cost: float
+    cost: Cost
     type: Literal["deco", "comment", "sign", "normal"]
     uri: str

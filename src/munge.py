@@ -111,9 +111,9 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         return first_date, last_date
 
     if len(date_selector) >= 1:
-        first_date = date_selector[0]
+        first_date = date_selector[0]  # type: ignore
 
     if len(date_selector) >= 2:
-        last_date = date_selector[1]
+        last_date = date_selector[1]  # type: ignore
 
     return first_date, last_date
