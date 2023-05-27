@@ -17,8 +17,8 @@ def main():
     col1, col2 = st.columns(2)
 
     with col1:
-        first_date, last_date = munge.get_dates(names_df)
-        st.write("Selected dates are", first_date, last_date)
+        date_range = munge.get_dates(names_df)
+        st.write("Selected dates are", date_range)
 
     with col2:
         all_persons = munge.get_all_names(person_df)
@@ -27,7 +27,7 @@ def main():
         )
         st.write(f"Selected {selected_persons}")
 
-    names_df = names_df[names_df.date.between(first_date, last_date)]
+    names_df = names_df[names_df.date.between(date_range)]
 
     name_tab, cheki_tab = st.tabs(["💃name", "🎴cheki"])
 
@@ -38,8 +38,8 @@ def main():
 
     with cheki_tab:
         get_checki_tab(
-            first_date=first_date,
-            last_date=last_date,
+            first_date=date_range[0],
+            last_date=date_range[1],
             venue_df=venue_df,
             selected_persons=selected_persons,
             dated_cheki_df=dated_cheki_df,

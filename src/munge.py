@@ -1,4 +1,5 @@
-import datetime
+from datetime import date
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -88,11 +89,9 @@ def get_all_names(df: pd.DataFrame) -> list[str]:
     return sorted([name for name in df.name1.unique() if name != ""])
 
 
-def get_dates(input_df: pd.DataFrame) -> tuple[datetime.date, datetime.date]:
+def get_dates(input_df: pd.DataFrame) -> Any:
     earliest_date = input_df.date.min()
-    today = datetime.datetime.today().date()
-    last_date = today
-    first_date = datetime.date(today.year, 1, 1)
+    today = date.today()
 
     date_selector = st.date_input(
         "Select date range",
@@ -100,10 +99,4 @@ def get_dates(input_df: pd.DataFrame) -> tuple[datetime.date, datetime.date]:
         min_value=earliest_date,
         max_value=today,
     )
-    if isinstance(date_selector, tuple):
-        if date_selector[0]:
-            first_date = date_selector[0]
-        if date_selector[1]:
-            last_date = date_selector[1]
-
-    return first_date, last_date
+    return date_selector
