@@ -3,7 +3,6 @@ import datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
-from loguru import logger
 
 
 def get_records_df(
@@ -35,7 +34,6 @@ def get_records_df(
     df_p = df_p.rename(columns={"name1": "name", "group1": "group"})
     df = pd.merge(df, df_p, how="left", on="name")
     df["group"] = df["group"].fillna("Solo")
-    logger.debug(f"df columns: {df.columns}")
     df
     return df
 

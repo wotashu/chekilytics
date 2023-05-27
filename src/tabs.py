@@ -3,7 +3,6 @@ from datetime import date
 import numpy as np
 import pandas as pd
 import streamlit as st
-from loguru import logger
 
 import src.figures as figures
 import src.munge as munge
@@ -51,10 +50,6 @@ def get_checki_tab(
         st.dataframe(dated_cheki_df, 800, 800)
 
     with map_tab:
-        logger.debug(f"DF preview: {dated_cheki_df.head()}")
-        logger.debug(f"DF columns: {dated_cheki_df.columns}")
-        logger.debug(f"DF shape: {dated_cheki_df.shape}")
-
         df_groupby = (
             dated_cheki_df.groupby("location")["date"]
             .count()
