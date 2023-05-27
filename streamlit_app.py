@@ -27,7 +27,7 @@ def main():
         )
         st.write(f"Selected {selected_persons}")
 
-    names_df = names_df[names_df.date.between(date_range)]
+    names_df = names_df[names_df.date.between(date_range[0], date_range[1])]
 
     name_tab, cheki_tab = st.tabs(["💃name", "🎴cheki"])
 
