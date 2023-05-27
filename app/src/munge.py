@@ -9,8 +9,8 @@ from loguru import logger
 def get_records_df(
     names_df: pd.DataFrame,
     person_df: pd.DataFrame,
-    groupby_select: str | None = None,
-    sort_level: str | None = None,
+    groupby_select: list[str] = [],
+    sort_level: int = 1,
 ):
     n_shown_columns = sorted(names_df.n_shown.unique())
     df = (
@@ -30,7 +30,7 @@ def get_records_df(
 
     df = df.sort_values(by=["total"] + n_shown_columns, ascending=False).reset_index()
 
-    df.columns = [str(col) for col in df.columns]
+    df.columns = pd.Index([str(col) for col in df.columns])
     df_p = person_df[["name1", "group1"]]
     df_p = df_p.rename(columns={"name1": "name", "group1": "group"})
     df = pd.merge(df, df_p, how="left", on="name")
@@ -102,9 +102,9 @@ def get_dates(input_df) -> tuple[datetime.date, datetime.date]:
         min_value=earliest_date,
         max_value=today,
     )
-
-    if len(date_selector) == 2:
-        first_date = date_selector[0]
-        last_date = date_selector[1]
+    if isinstance(date_selector, tuple):
+        if len(date_selector) == 2:
+            first_date = date_selector[0]
+            last_date = date_selector[1]
 
     return first_date, last_date

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "streamlit-cheki"
+name = "chekilytics"
 version = "0.1.0"
 description = ""
 authors = ["Jonathan <jolin3apa@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11,<3.12"
 plotly = "^5.5.0"
 gspread = "^5.1.1"
 numpy = "^1.22.1"
@@ -20,6 +20,8 @@ pandas = "^2.0.1"
 black = "^21.12b0"
 pytest = "^6.2.5"
 jupyter = "^1.0.0"
+pandera = {extras = ["mypy"], version = "^0.15.1"}
+ruff = "^0.0.270"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
@@ -27,3 +29,6 @@ mypy = "^0.991"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[mypy]
+plugins = ["pandera.mypy"]

@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-import munge
+import app.src.munge as munge
 
 
 def get_cutoff_values(df: pd.DataFrame, selected_persons: list[str], max_value: int):
@@ -15,5 +15,5 @@ def get_cutoff_values(df: pd.DataFrame, selected_persons: list[str], max_value: 
         value=cutoff_value,
     )
     if cutoff > 0:
-        df = munge.get_cutoff_data(df, cutoff)
+        df = munge.get_cutoff_data(df, int(cutoff))
     return df

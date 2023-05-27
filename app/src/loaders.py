@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from connections import get_google_conn
+from app.src.connections import get_google_conn
 
 gc = get_google_conn()
 
