@@ -18,7 +18,7 @@ def main():
 
     with col1:
         date_range = munge.get_dates(names_df)
-        st.write("Selected dates are", date_range)
+        st.write(f"Selected dates are {date_range[0]} - {date_range[1]}")
 
     with col2:
         all_persons = munge.get_all_names(person_df)
