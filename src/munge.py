@@ -99,4 +99,8 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         min_value=earliest_date,
         max_value=today,
     )
+
+    if isinstance(date_selector, date):
+        return date_selector, today
+
     return date_selector
