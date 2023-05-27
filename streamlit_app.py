@@ -5,10 +5,10 @@ import pandas as pd
 import streamlit as st
 from loguru import logger
 
-import app.src.figures as figures
-import app.src.munge as munge
-from app.src.geo import get_map_layer
-from app.src.loaders import get_datetime_cols, get_worksheet, get_worksheet_location
+import src.figures as figures
+import src.munge as munge
+from src.geo import get_map_layer
+from src.loaders import get_datetime_cols, get_worksheet, get_worksheet_location
 
 
 def get_checki_tab(
@@ -141,7 +141,7 @@ def get_name_tab(
                 value=cutoff_value,
             )
             if cutoff > 0:
-                name_df = munge.get_cutoff_data(name_df, cutoff)
+                name_df = munge.get_cutoff_data(name_df, int(cutoff))
         with col2:
             top_n = st.number_input(
                 "Keep top n",

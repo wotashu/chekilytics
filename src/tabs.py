@@ -5,9 +5,9 @@ import pandas as pd
 import streamlit as st
 from loguru import logger
 
-import app.src.figures as figures
-import app.src.munge as munge
-from app.src.geo import get_map_layer
+import src.figures as figures
+import src.munge as munge
+from src.geo import get_map_layer
 
 
 def get_checki_tab(

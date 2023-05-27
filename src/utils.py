@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-import app.src.munge as munge
+import src.munge as munge
 
 
 def get_cutoff_values(df: pd.DataFrame, selected_persons: list[str], max_value: int):

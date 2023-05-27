@@ -90,7 +90,7 @@ def get_all_names(df: pd.DataFrame) -> list[str]:
     return sorted([name for name in df.name1.unique() if name != ""])
 
 
-def get_dates(input_df) -> tuple[datetime.date, datetime.date]:
+def get_dates(input_df: pd.DataFrame) -> tuple[datetime.date, datetime.date]:
     earliest_date = input_df.date.min()
     today = datetime.datetime.today().date()
     last_date = today
@@ -103,8 +103,9 @@ def get_dates(input_df) -> tuple[datetime.date, datetime.date]:
         max_value=today,
     )
     if isinstance(date_selector, tuple):
-        if len(date_selector) == 2:
+        if date_selector[0]:
             first_date = date_selector[0]
+        if date_selector[1]:
             last_date = date_selector[1]
 
     return first_date, last_date
