@@ -100,7 +100,7 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         max_value=today,
     )
 
-    if isinstance(date_selector, date):
+    if isinstance(date_selector, date) or len(date_selector) < 2:
         return date_selector, today
 
     return date_selector
