@@ -93,6 +93,8 @@ def get_all_names(df: pd.DataFrame) -> list[str]:
 def get_dates(input_df: pd.DataFrame) -> Any:
     earliest_date = input_df.date.min()
     today = date.today()
+    first_date = earliest_date
+    last_date = today
 
     date_selector = st.date_input(
         "Select date range",
@@ -100,9 +102,18 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         min_value=earliest_date,
         max_value=today,
     )
-    logger.debug(f"date_selector: {date_selector}, shape: {len(date_selector)}")
+    logger.debug(f"date_selector: {date_selector}")
 
-    if isinstance(date_selector, date) or len(date_selector) < 2:
-        return date_selector, today
+    if isinstance(date_selector, date):
+        return (date_selector, today)
 
-    return date_selector
+    if len(date_selector) == 0:
+        return first_date, last_date
+
+    if len(date_selector) >= 1:
+        first_date = date_selector[0]
+
+    if len(date_selector) >= 2:
+        last_date = date_selector[1]
+
+    return first_date, last_date
