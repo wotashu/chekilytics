@@ -39,3 +39,7 @@ def get_treemap_fig(df: pd.DataFrame, use_groups: bool = True):
         color="name",
         color_discrete_map=xkcd_colors,
     )
+
+
+def get_cheki_bar_fig(df: pd.DataFrame):
+    return px.bar(df, y="count")

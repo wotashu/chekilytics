@@ -44,10 +44,18 @@ def get_checki_tab(
         dated_cheki_df = dated_cheki_df.replace(np.nan, "")
         dated_cheki_df.sort_values("date", inplace=True)
 
-    map_tab, data_tab = st.tabs(["🗺️ Map", "🗃 Data"])
+    map_tab, chart_tab, data_tab = st.tabs(["🗺️ Map", "📈 Chart", "🗃 Data"])
 
     with data_tab:
         st.dataframe(dated_cheki_df, 800, 800)
+
+    with chart_tab:
+        dated_cheki_df["datetime"] = pd.to_datetime(dated_cheki_df["date"])
+        dated_cheki_df.set_index("datetime", inplace=True)
+        df_groupby = dated_cheki_df.groupby(pd.Grouper(freq="M"))["name1"].count()
+        df_groupby.rename("count", inplace=True)
+        fig = figures.get_cheki_bar_fig(df_groupby)
+        st.plotly_chart(fig)
 
     with map_tab:
         df_groupby = (

@@ -25,7 +25,10 @@ def main():
         selected_persons = st.multiselect(
             "Search for a name", np.insert(all_persons, 0, "")
         )
-        st.write(f"Selected {selected_persons}")
+        if selected_persons:
+            st.write(f"Selected {selected_persons}")
+        else:
+            st.write("No names selected.")
 
     names_df = names_df[names_df.date.between(date_range[0], date_range[1])]
 
