@@ -12,7 +12,7 @@ def get_records_df(
     person_df: pd.DataFrame,
     groupby_select: list[str] = [],
     sort_level: int = 1,
-):
+) -> pd.DataFrame:
     n_shown_columns = sorted(names_df.n_shown.unique())
     df = (
         names_df.groupby(groupby_select + ["n_shown"])["person"]

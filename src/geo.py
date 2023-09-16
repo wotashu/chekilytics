@@ -2,7 +2,7 @@ import pandas as pd
 import pydeck as pdk
 
 
-def get_map_layer(df: pd.DataFrame, map_type: str):
+def get_map_layer(df: pd.DataFrame, map_type: str) -> pdk.Deck:
     if map_type == "column":
         pitch = 50
         layer = pdk.Layer(

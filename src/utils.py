@@ -4,7 +4,9 @@ import streamlit as st
 import src.munge as munge
 
 
-def get_cutoff_values(df: pd.DataFrame, selected_persons: list[str], max_value: int):
+def get_cutoff_values(
+    df: pd.DataFrame, selected_persons: list[str], max_value: int
+) -> pd.DataFrame:
     cutoff_value = 0
     if len(selected_persons) >= 12:
         cutoff_value = round(df["total"].median())

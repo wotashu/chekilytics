@@ -3,7 +3,7 @@ import streamlit as st
 from google.oauth2 import service_account
 
 
-def get_google_conn():
+def get_google_conn() -> gspread.client.Client:
     # Create a connection object.
     credentials = service_account.Credentials.from_service_account_info(
         st.secrets["gcp_service_account"],

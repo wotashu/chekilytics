@@ -9,19 +9,64 @@ import src.munge as munge
 from src.geo import get_map_layer
 
 
+def get_cheki_chart_data(df: pd.DataFrame) -> pd.DataFrame:
+    chart_data = df.copy()
+    chart_data["datetime"] = pd.to_datetime(chart_data["date"])
+    chart_data.set_index("datetime", inplace=True)
+    df_groupby = chart_data.groupby(pd.Grouper(freq="M"))["name1"].count()
+    df_groupby.rename("count", inplace=True)
+    updated_df = df_groupby.to_frame()
+    return updated_df
+
+
+def limit_to_selected_persons(selected_persons: list[str], df: pd.DataFrame):
+    temp_dfs = []
+    name_cols = [col for col in df.columns if "name" in col]
+    for col in name_cols:
+        for person in selected_persons:
+            temp_dfs.append(df[df[col].str.contains(person)])
+    dated_cheki_df = pd.concat(temp_dfs)
+
+    dated_cheki_df = dated_cheki_df.replace("", np.nan)
+    dated_cheki_df = dated_cheki_df.dropna(how="all", axis=1)
+    dated_cheki_df = dated_cheki_df.replace(np.nan, "")
+    dated_cheki_df.sort_values("date", inplace=True)
+
+
+def get_cheki_map_data(df: pd.DataFrame) -> pd.DataFrame:
+    groupeds = df.groupby("location")["date"].count()
+    map_df = groupeds.reset_index()
+    map_df.rename(columns={"date": "count"}, inplace=True)
+    cheki_map_df = pd.merge(
+        map_df,
+        df[["location", "latitude", "longitude", "full_address"]],
+        how="inner",
+        on="location",
+    )
+    # df = df[["location", "latitude", "longitude", "full_address"]]
+    cheki_map_df = cheki_map_df.replace("", np.nan)
+    cheki_map_df = cheki_map_df.dropna(axis=0, how="any")
+    cheki_map_df.drop_duplicates(inplace=True)
+    # df = df.reset_index(drop=True)
+
+    cheki_map_df["latitude"] = cheki_map_df["latitude"].astype(float)
+    cheki_map_df["longitude"] = cheki_map_df["longitude"].astype(float)
+    return cheki_map_df
+
+
 def get_checki_tab(
     first_date: date,
     last_date: date,
     venue_df: pd.DataFrame,
     selected_persons: list[str],
     dated_cheki_df: pd.DataFrame,
-):
-    dated_cheki_df = dated_cheki_df[
+) -> None:
+    ranged_cheki_df = dated_cheki_df[
         (dated_cheki_df.date >= pd.to_datetime(first_date))
         & (dated_cheki_df.date <= pd.to_datetime(last_date))
     ]
-    dated_cheki_df["date"] = dated_cheki_df["date"].dt.strftime("%Y-%m-%d")
-    dated_cheki_df = pd.merge(
+    ranged_cheki_df["date"] = ranged_cheki_df["date"].dt.strftime("%Y-%m-%d")
+    merged_cheki_data = pd.merge(
         dated_cheki_df,
         venue_df,
         how="left",
@@ -30,54 +75,23 @@ def get_checki_tab(
     )
 
     if selected_persons:
-        temp_dfs = []
-        name_cols = [col for col in dated_cheki_df.columns if "name" in col]
-        for col in name_cols:
-            for person in selected_persons:
-                temp_dfs.append(
-                    dated_cheki_df[dated_cheki_df[col].str.contains(person)]
-                )
-        dated_cheki_df = pd.concat(temp_dfs)
-
-        dated_cheki_df = dated_cheki_df.replace("", np.nan)
-        dated_cheki_df = dated_cheki_df.dropna(how="all", axis=1)
-        dated_cheki_df = dated_cheki_df.replace(np.nan, "")
-        dated_cheki_df.sort_values("date", inplace=True)
+        merged_cheki_data = limit_to_selected_persons(
+            selected_persons, merged_cheki_data
+        )
 
     map_tab, chart_tab, data_tab = st.tabs(["🗺️ Map", "📈 Chart", "🗃 Data"])
 
     with data_tab:
-        st.dataframe(dated_cheki_df, 800, 800)
+        st.dataframe(merged_cheki_data, 800, 800)
 
     with chart_tab:
-        dated_cheki_df["datetime"] = pd.to_datetime(dated_cheki_df["date"])
-        dated_cheki_df.set_index("datetime", inplace=True)
-        df_groupby = dated_cheki_df.groupby(pd.Grouper(freq="M"))["name1"].count()
-        df_groupby.rename("count", inplace=True)
-        fig = figures.get_cheki_bar_fig(df_groupby)
+        cheki_chart_data = get_cheki_chart_data(merged_cheki_data)
+        fig = figures.get_cheki_bar_fig(cheki_chart_data)
         st.plotly_chart(fig)
 
     with map_tab:
-        df_groupby = (
-            dated_cheki_df.groupby("location")["date"]
-            .count()
-            .reset_index()
-            .rename(columns={"date": "count"})
-        )
-        cheki_map_df = pd.merge(
-            df_groupby,
-            dated_cheki_df[["location", "latitude", "longitude", "full_address"]],
-            how="inner",
-            on="location",
-        )
-        # df = df[["location", "latitude", "longitude", "full_address"]]
-        cheki_map_df = cheki_map_df.replace("", np.nan)
-        cheki_map_df = cheki_map_df.dropna(axis=0, how="any")
-        cheki_map_df.drop_duplicates(inplace=True)
-        # df = df.reset_index(drop=True)
-
-        cheki_map_df["latitude"] = cheki_map_df["latitude"].astype(float)
-        cheki_map_df["longitude"] = cheki_map_df["longitude"].astype(float)
+        merged_cheki_data.copy()
+        cheki_map_df = get_cheki_map_data(merged_cheki_data)
 
         (
             heat_tab,
@@ -103,7 +117,7 @@ def get_checki_tab(
 
 def get_name_tab(
     names_df: pd.DataFrame, person_df: pd.DataFrame, selected_persons: list[str]
-):
+) -> None:
     also_group_by_date = st.checkbox("Also group by date?", value=False)
     if also_group_by_date:
         groupby_select = ["date", "name"]
@@ -118,7 +132,7 @@ def get_name_tab(
         sort_level=sort_level,
     )
 
-    name_df.columns = [str(col) for col in name_df.columns]
+    name_df.columns = pd.Index([str(col) for col in name_df.columns])
     if selected_persons:
         name_df = name_df[name_df["name"].isin(selected_persons)]
 
@@ -152,18 +166,17 @@ def get_name_tab(
                     step=1,
                     min_value=0,
                     max_value=len(name_df) + 1,
-                    value=0,
+                    value=100,
                 )
 
-            if top_n:
+            if isinstance(top_n, int):
                 name_df = name_df.head(top_n)
 
             treemap_tab, bar_tab, pie_tab = st.tabs(["🌳treemap", "📊bar", "🥧pie"])
             with treemap_tab:
                 use_groups = st.checkbox(label="Use Groups")
-
                 fig = figures.get_treemap_fig(name_df, use_groups=use_groups)
-                st.plotly_chart(fig)
+                st.plotly_chart(fig, use_container_width=True)
             with bar_tab:
                 fig = figures.get_bar_fig(name_df)
                 st.plotly_chart(fig)

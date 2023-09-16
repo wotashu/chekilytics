@@ -16,7 +16,7 @@ def get_bar_fig(df: pd.DataFrame, **kwargs):
     )
 
 
-def get_pie_fig(df: pd.DataFrame):
+def get_pie_fig(df: pd.DataFrame) -> px.pie:
     fig = px.pie(
         df.sort_values(by="total", ascending=True),
         names="name",
@@ -28,7 +28,7 @@ def get_pie_fig(df: pd.DataFrame):
     return fig
 
 
-def get_treemap_fig(df: pd.DataFrame, use_groups: bool = True):
+def get_treemap_fig(df: pd.DataFrame, use_groups: bool = True) -> px.treemap:
     groupby_paths = ["name"]
     if use_groups:
         groupby_paths = ["group", "name"]
