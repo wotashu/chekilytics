@@ -34,8 +34,8 @@ def limit_to_selected_persons(selected_persons: list[str], df: pd.DataFrame):
 
 
 def get_cheki_map_data(df: pd.DataFrame) -> pd.DataFrame:
-    groupeds = df.groupby("location")["date"].count()
-    map_df = groupeds.reset_index()
+    grouped = df.groupby("location")["date"].count()
+    map_df = grouped.reset_index()
     map_df.rename(columns={"date": "count"}, inplace=True)
     cheki_map_df = pd.merge(
         map_df,
@@ -54,7 +54,7 @@ def get_cheki_map_data(df: pd.DataFrame) -> pd.DataFrame:
     return cheki_map_df
 
 
-def get_checki_tab(
+def get_cheki_tab(
     first_date: date,
     last_date: date,
     venue_df: pd.DataFrame,

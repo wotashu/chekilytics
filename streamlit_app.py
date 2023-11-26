@@ -1,9 +1,8 @@
 import numpy as np
-import streamlit as st
-
 import src.munge as munge
+import streamlit as st
 from src.loaders import get_datetime_cols, get_worksheet, get_worksheet_location
-from src.tabs import get_checki_tab, get_name_tab
+from src.tabs import get_cheki_tab, get_name_tab
 
 
 def main():
@@ -40,7 +39,7 @@ def main():
         )
 
     with cheki_tab:
-        get_checki_tab(
+        get_cheki_tab(
             first_date=date_range[0],
             last_date=date_range[1],
             venue_df=venue_df,
