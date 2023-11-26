@@ -1,6 +1,6 @@
 import matplotlib.colors as mcolors
 
-COLOR_DESCRETE_MAP = {
+COLOR_DISCRETE_MAP = {
     "Suzy": "lavender",
     "OTHERS": "grey",
     "七瀬千夏": "red",
@@ -58,5 +58,5 @@ COLOR_DESCRETE_MAP = {
 
 xkcd_colors = {
     name: mcolors.XKCD_COLORS[f"xkcd:{color_name}"].upper()
-    for name, color_name in COLOR_DESCRETE_MAP.items()
+    for name, color_name in COLOR_DISCRETE_MAP.items()
 }
