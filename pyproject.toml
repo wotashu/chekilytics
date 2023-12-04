@@ -30,5 +30,4 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.mypy]
-plugins = ["pandera.mypy"]
 ignore_missing_imports = true
