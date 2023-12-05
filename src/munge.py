@@ -4,7 +4,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import streamlit as st
-from loguru import logger
 
 
 def get_records_df(
@@ -102,7 +101,6 @@ def get_dates(input_df: pd.DataFrame) -> Any:
         min_value=earliest_date,
         max_value=today,
     )
-    logger.debug(f"date_selector: {date_selector}")
 
     if isinstance(date_selector, date):
         return (date_selector, today)
