@@ -15,13 +15,13 @@ streamlit = "^1.12.2"
 validators = "0.18.2"
 loguru = "^0.6.0"
 pandas = "^2.0.1"
+pydantic = "^2.5.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
 black = "^21.12b0"
 pytest = "^6.2.5"
 jupyter = "^1.0.0"
-pandera = { extras = ["mypy"], version = "^0.15.1" }
 ruff = "^0.0.270"
 
 [build-system]
