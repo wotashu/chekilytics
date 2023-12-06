@@ -134,3 +134,4 @@ dmypy.json
 notebooks
 .streamlit/
 .streamlit/config.toml
+*.ipynb
