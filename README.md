@@ -2,13 +2,13 @@
 
 A personal project for visualizing my personal collection of idol cheki pictures.
 
-チェキを管理する個人アプリ。
+個人的なプロジェクトで、私のアイドルチェキのコレクションを視覚化するためのものです。
 
 ## Motivation
 
 The current work has been on the visualization of various metrics relating to the provenance of each cheki, and to grow my personal skills during my free time.
 
-私用の趣味を分かるように、技術能力を磨くために。
+現在の作業は、アイドルチェキのコレクションに関連するさまざまなメトリクスの視覚化に焦点を当て、自由な時間を利用して個人的なスキルを向上させること。
 
 ## Technologies
 
