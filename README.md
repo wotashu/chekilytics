@@ -31,19 +31,19 @@ The current work has been on the visualization of various metrics relating to th
 
 Add a [secrets file](https://docs.streamlit.io/library/advanced-features/secrets-management).
 
-The application currently wants credentials for GCP and mapbox.
+The application currently wants credentials for GCP and Mapbox.
 
 ## Startup
 
 Use poetry to generate the virtual environment.
 
-```bash
+```shell
 poetry install && poetry shell
 ```
 
 Then begin the streamlit application.
 
-```bash
+```shell
 streamlit run streamlit_app.py
 ```
 
