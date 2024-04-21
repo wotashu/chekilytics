@@ -13,7 +13,7 @@ def get_cheki_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     chart_data = df.copy()
     chart_data["datetime"] = pd.to_datetime(chart_data["date"])
     chart_data.set_index("datetime", inplace=True)
-    df_groupby = chart_data.groupby(pd.Grouper(freq="M"))["name1"].count()
+    df_groupby = chart_data.groupby(pd.Grouper(freq="MS"))["name1"].count()
     df_groupby.rename("count", inplace=True)
     updated_df = df_groupby.to_frame()
     return updated_df
