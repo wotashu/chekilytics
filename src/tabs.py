@@ -19,7 +19,9 @@ def get_cheki_chart_data(df: pd.DataFrame) -> pd.DataFrame:
     return updated_df
 
 
-def limit_to_selected_persons(selected_persons: list[str], df: pd.DataFrame):
+def limit_to_selected_persons(
+    selected_persons: list[str], df: pd.DataFrame
+) -> pd.DataFrame:
     temp_dfs = []
     name_cols = [col for col in df.columns if "name" in col]
     for col in name_cols:
@@ -31,6 +33,7 @@ def limit_to_selected_persons(selected_persons: list[str], df: pd.DataFrame):
     dated_cheki_df = dated_cheki_df.dropna(how="all", axis=1)
     dated_cheki_df = dated_cheki_df.replace(np.nan, "")
     dated_cheki_df.sort_values("date", inplace=True)
+    return dated_cheki_df
 
 
 def get_cheki_map_data(df: pd.DataFrame) -> pd.DataFrame:
