@@ -161,12 +161,15 @@ def get_name_tab(
                 if cutoff > 0:
                     name_df = munge.get_cutoff_data(name_df, int(cutoff))
             with col2:
+                value = len(name_df)
+                if len(name_df) > 100:
+                    value = 100
                 top_n = st.number_input(
                     "Keep top n",
                     step=1,
                     min_value=0,
                     max_value=len(name_df) + 1,
-                    value=100,
+                    value=value,
                 )
 
             if isinstance(top_n, int):
