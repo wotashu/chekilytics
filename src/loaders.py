@@ -8,7 +8,7 @@ gc = get_google_conn()
 
 # Uses st.cache to only rerun when the query changes or after 10 min.
 @st.cache_data(ttl=600)
-def get_worksheet(url: str, sheet_num: int = 0):
+def get_worksheet(url: str, sheet_num: int = 0) -> pd.DataFrame:
     worksheet = gc.open_by_url(url).get_worksheet(sheet_num)
     df = pd.DataFrame(worksheet.get_all_values())
     df.columns = df.iloc[0]

@@ -57,6 +57,6 @@ COLOR_DISCRETE_MAP = {
 
 
 xkcd_colors = {
-    name: mcolors.XKCD_COLORS[f"xkcd:{color_name}"].upper()
+    name: str(mcolors.XKCD_COLORS[f"xkcd:{color_name}"]).upper()
     for name, color_name in COLOR_DISCRETE_MAP.items()
 }

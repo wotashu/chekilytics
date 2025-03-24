@@ -35,7 +35,6 @@ def get_records_df(
     df_p = df_p.rename(columns={"name1": "name", "group1": "group"})
     df = pd.merge(df, df_p, how="left", on="name")
     df["group"] = df["group"].fillna("Solo")
-    df
     return df
 
 

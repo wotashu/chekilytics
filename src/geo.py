@@ -17,7 +17,7 @@ def get_map_layer(df: pd.DataFrame, map_type: str) -> pdk.Deck:
             on_click=True,
             radius=50,
         )
-    if map_type == "scatter":
+    elif map_type == "scatter":
         pitch = 0
         layer = pdk.Layer(
             "ScatterplotLayer",
@@ -32,7 +32,7 @@ def get_map_layer(df: pd.DataFrame, map_type: str) -> pdk.Deck:
             max_radius_pixels=200,
             on_click=True,
         )
-    if map_type == "heat":
+    elif map_type == "heat":
         pitch = 0
         layer = pdk.Layer(
             "HeatmapLayer",
@@ -45,16 +45,19 @@ def get_map_layer(df: pd.DataFrame, map_type: str) -> pdk.Deck:
             on_click=True,
             get_weight="count",
         )
+    else:
+        raise ValueError(f"Invalid map type: {map_type}")
+
     return pdk.Deck(
-        map_style=None,
         initial_view_state=pdk.ViewState(
             latitude=35.678942,
             longitude=139.737892,
             zoom=10,
             pitch=pitch,
         ),
-        tooltip={
-            "html": "Location:{full_address}, count: {count}",
-        },
+        # tooltip={
+        #    "html": "Location:{full_address}, count: {count}",
+        # },
+        tooltip=True,
         layers=[layer],
     )

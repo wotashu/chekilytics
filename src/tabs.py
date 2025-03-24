@@ -146,7 +146,7 @@ def get_name_tab(
 
     with chart_tab:
         max_value = name_df["total"].max()
-        if max_value is not np.NaN:
+        if max_value is not np.nan:
             max_value = int(name_df["total"].max())
 
             col1, col2 = st.columns(2)
